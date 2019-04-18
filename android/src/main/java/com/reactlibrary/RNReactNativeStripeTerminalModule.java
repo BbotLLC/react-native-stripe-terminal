@@ -28,6 +28,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import android.nfc.NfcAdapter;
+import android.os.Build;
 import android.util.Log;
 
 public class RNReactNativeStripeTerminalModule
@@ -102,6 +103,11 @@ public class RNReactNativeStripeTerminalModule
 
         if(_isInitialized()){
             promise.resolve(true);
+            return;
+        }
+
+        if(Build.VERSION.SDK_INT <= 23){
+            promise.reject("You need a more recent version of Android");
             return;
         }
 
