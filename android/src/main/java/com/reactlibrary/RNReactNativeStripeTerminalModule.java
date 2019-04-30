@@ -33,7 +33,7 @@ import android.util.Log;
 
 public class RNReactNativeStripeTerminalModule
         extends ReactContextBaseJavaModule
-        implements TerminalStateManager, ReaderInputListener {
+        implements TerminalStateManager, ReaderDisplayListener {
 
     private ReactApplicationContext reactContext;
 
@@ -106,7 +106,7 @@ public class RNReactNativeStripeTerminalModule
             return;
         }
 
-        if(Build.VERSION.SDK_INT <= 23){
+        if(Build.VERSION.SDK_INT < 21){
             promise.reject("You need a more recent version of Android");
             return;
         }
@@ -121,8 +121,9 @@ public class RNReactNativeStripeTerminalModule
 
             TerminalListener listener = new TerminalEventListener(this);
 
+            ReactApplicationContext reactContext = getReactApplicationContext();
             // Pass in the current application context, the desired log level, your token provider, and the listener you created
-            Terminal.initTerminal(this.reactContext, LogLevel.VERBOSE, tokenProvider, listener);
+            Terminal.initTerminal(reactContext, LogLevel.VERBOSE, tokenProvider, listener);
 
             this.terminal = Terminal.getInstance();
 
@@ -141,10 +142,10 @@ public class RNReactNativeStripeTerminalModule
             return;
         }
 
-        DiscoveryConfiguration config = new DiscoveryConfiguration(timeout, DeviceType.CHIPPER_2X, false);
-        DiscoveryEventListener discoveryEventListener = new DiscoveryEventListener(this);
-
         try {
+            DiscoveryConfiguration config = new DiscoveryConfiguration(timeout, DeviceType.CHIPPER_2X, false);
+            DiscoveryEventListener discoveryEventListener = new DiscoveryEventListener(this);
+
             Terminal terminal = Terminal.getInstance();
             cancelable = terminal.discoverReaders(
                 config,
@@ -157,7 +158,6 @@ public class RNReactNativeStripeTerminalModule
 
         // todo - handle this promise in DiscoveryCallbacks?
         //promise.resolve(true);
-
     }
 
     @ReactMethod
@@ -256,6 +256,30 @@ public class RNReactNativeStripeTerminalModule
     }
 
     @ReactMethod
+    public void readReusableCard(Promise promise){
+        try {
+
+            ReadReusableCardParameters params = new ReadReusableCardParameters.Builder()
+                    .build();
+
+            Terminal.getInstance().readReusableCard(params, this, new PaymentMethodCallback() {
+                @Override
+                public void onSuccess(PaymentMethod paymentMethod) {
+                    promise.resolve(paymentMethodToMap(paymentMethod));
+                }
+
+                @Override
+                public void onFailure(@Nonnull TerminalException e) {
+                    promise.reject(e.getErrorMessage());
+                }
+            });
+
+        } catch(Exception error){
+            promise.reject(error.getMessage());
+        }
+    }
+
+    @ReactMethod
     public void createPaymentIntent(int amount, String currency, Promise promise) {
 
         this.cancelable = null;
@@ -334,7 +358,7 @@ public class RNReactNativeStripeTerminalModule
     @ReactMethod
     public void confirmPaymentIntent(Promise promise) {
 
-        Terminal.getInstance().confirmPaymentIntent(
+        Terminal.getInstance().processPayment(
                 currentPaymentIntent,
                 new ConfirmPaymentIntentCallback(this, promise)
         );
@@ -354,7 +378,7 @@ public class RNReactNativeStripeTerminalModule
     }
 
     @Override
-    public void onBeginWaitingForReaderInput(ReaderInputOptions options) {
+    public void onRequestReaderInput(ReaderInputOptions options) {
         // todo trigger event in react
         System.out.println("Reader requests input in one of the following methods: " +
                 options.toString());
@@ -364,7 +388,7 @@ public class RNReactNativeStripeTerminalModule
     }
 
     @Override
-    public void onRequestReaderInputPrompt(ReaderInputPrompt prompt) {
+    public void onRequestReaderDisplayMessage(ReaderDisplayMessage prompt) {
         // Todo trigger event in react
         System.out.println("Reader prompts for the following action: " +
                 prompt.toString());
@@ -429,6 +453,27 @@ public class RNReactNativeStripeTerminalModule
         pi.putString("status", paymentIntent.getStatus().toString());
 
         return pi;
+    }
+
+    private WritableMap paymentMethodToMap(PaymentMethod paymentMethod){
+        WritableMap pm = Arguments.createMap();
+        pm.putString("id", paymentMethod.getId());
+        pm.putString("customer", paymentMethod.getCustomer());
+
+        PaymentMethod.CardDetails cardDetails = paymentMethod.getCardDetails();
+
+        WritableMap cd = Arguments.createMap();
+        cd.putString("brand", cardDetails.getBrand());
+        cd.putString("country", cardDetails.getCountry());
+        cd.putInt("expMonth", cardDetails.getExpMonth());
+        cd.putInt("expYear", cardDetails.getExpYear());
+        cd.putString("fingerprint", cardDetails.getFingerprint());
+        cd.putString("last4", cardDetails.getLast4());
+
+        pm.putMap("cardDetails", cd);
+
+        return pm;
+
     }
 
     public void emit(String event, @Nullable Object data){
