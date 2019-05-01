@@ -76,6 +76,7 @@ export default {
 
   /**
    *
+   * @param timeout
    * @param callbackFn - The callbackFn is passed the readers array everytime we poll for new readers
    * @returns {Promise<*>}
    */
@@ -105,7 +106,7 @@ export default {
 
 
   async disconnectReader() {
-    return response = await StripeTerminal.disconnectReader();
+    return  await StripeTerminal.disconnectReader();
   },
 
   async createPaymentIntent(amount, currency) {
@@ -124,6 +125,10 @@ export default {
 
   async confirmPaymentIntent() {
     return await StripeTerminal.confirmPaymentIntent();
+  },
+
+  async readReusableCard(){
+    return await StripeTerminal.readReusableCard();
   },
 
   on(event, fn) {
