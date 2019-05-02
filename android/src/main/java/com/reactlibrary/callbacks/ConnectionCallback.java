@@ -24,7 +24,7 @@ public final class ConnectionCallback implements ReaderCallback {
 
     @Override
     public void onFailure(TerminalException e){
-        this.promise.reject(e.getErrorMessage());
+        this.promise.reject("ConnectionError", e.getErrorMessage());
         this.manager.onFailure(e);
     }
 }

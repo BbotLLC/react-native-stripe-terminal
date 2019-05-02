@@ -23,7 +23,7 @@ public final class DisconnectCallback implements Callback {
 
     public void onFailure(TerminalException e) {
         if(promise != null)
-            promise.reject(e.getErrorMessage());
+            promise.reject("DisconnectError", e.getErrorMessage());
         this.manager.onFailure(e);
     }
 }

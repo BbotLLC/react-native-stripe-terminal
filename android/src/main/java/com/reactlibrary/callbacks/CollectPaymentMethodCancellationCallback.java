@@ -1,7 +1,9 @@
 package com.reactlibrary.callbacks;
 
+import com.facebook.react.bridge.Promise;
 import com.stripe.stripeterminal.*;
 import com.reactlibrary.TerminalStateManager;
+
 
 /**
  * A [Callback] that notifies the [TerminalStateManager] that [Terminal.collectPaymentMethod] has
@@ -9,17 +11,20 @@ import com.reactlibrary.TerminalStateManager;
  */
 public final class CollectPaymentMethodCancellationCallback implements Callback {
     private final TerminalStateManager manager;
+    private Promise promise;
 
-    public CollectPaymentMethodCancellationCallback(TerminalStateManager manager) {
+    public CollectPaymentMethodCancellationCallback(TerminalStateManager manager, Promise promise) {
         super();
         this.manager = manager;
+        this.promise = promise;
     }
 
     public void onSuccess() {
-        this.manager.onCancelCollectPaymentMethod();
+        this.manager.onCancelCollectPaymentMethod(this.promise);
     }
 
     public void onFailure(TerminalException e) {
+        promise.reject("CollectPaymentMethodError", e.getErrorMessage());
         this.manager.onFailure(e);
     }
 }

@@ -23,7 +23,7 @@ public final class CollectPaymentMethodCallback implements PaymentIntentCallback
     }
 
     public void onFailure(TerminalException e) {
-        promise.reject(e.getErrorMessage());
+        promise.reject("CollectPaymentMethodError", e.getErrorMessage());
         this.manager.onFailure(e);
     }
 }

@@ -23,7 +23,7 @@ public final class DiscoveryCallback implements Callback {
     }
 
     public void onFailure(TerminalException e) {
-        this.promise.reject(e.getErrorMessage());
+        this.promise.reject("DiscoveryError", e.getErrorMessage());
         this.manager.onFailure(e);
     }
 }

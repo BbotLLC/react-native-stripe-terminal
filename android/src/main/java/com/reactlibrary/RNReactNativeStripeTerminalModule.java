@@ -29,6 +29,7 @@ import java.util.Map;
 
 import android.nfc.NfcAdapter;
 import android.os.Build;
+import android.os.CancellationSignal;
 import android.util.Log;
 
 public class RNReactNativeStripeTerminalModule
@@ -39,7 +40,9 @@ public class RNReactNativeStripeTerminalModule
 
     private List<Reader> availableReaders;
 
-    private Cancelable cancelable;
+    private Cancelable cancelableDiscovery;
+    private Cancelable cancelableCollect;
+    private Boolean isDiscovering;
 
     private PaymentIntent currentPaymentIntent;
 
@@ -139,17 +142,20 @@ public class RNReactNativeStripeTerminalModule
             return;
         }
 
+        this.isDiscovering = true;
+
         try {
             DiscoveryConfiguration config = new DiscoveryConfiguration(timeout, DeviceType.CHIPPER_2X, false);
             DiscoveryEventListener discoveryEventListener = new DiscoveryEventListener(this);
 
             Terminal terminal = Terminal.getInstance();
-            cancelable = terminal.discoverReaders(
+            cancelableDiscovery = terminal.discoverReaders(
                 config,
                 discoveryEventListener,
                 new DiscoveryCallback(this, promise)
             );
         } catch(Exception err){
+            this.isDiscovering = false;
             promise.reject("Error",err.getMessage());
         }
 
@@ -159,37 +165,23 @@ public class RNReactNativeStripeTerminalModule
 
     @ReactMethod
     public void cancelDiscovery(Promise promise){
-        if(cancelable == null){
+        if(cancelableDiscovery == null){
             promise.reject("Error","Nothing to cancel");
         } else {
-            if(cancelable.isCompleted()){
+            if(cancelableDiscovery.isCompleted()){
                 promise.resolve(true);
-                cancelable = null;
+                cancelableDiscovery = null;
             } else {
-                cancelable.cancel(new Callback() {
-                    @Override
-                    public void onSuccess() {
-                        promise.resolve(true);
-                        cancelable = null;
-                    }
-
-                    @Override
-                    public void onFailure(@Nonnull TerminalException e) {
-                        promise.reject("Error",e.getErrorMessage());
-                        cancelable = null;
-                    }
-                });
+                cancelableDiscovery.cancel(new DiscoveryCancellationCallback(this, promise));
             }
         }
     }
-
 
 
     @ReactMethod
     public void connectReader(String readerId, Promise promise) {
 
         Reader reader = findReaderBySerial(readerId);
-        cancelable = null;
 
         if (reader != null) {
             try {
@@ -279,8 +271,6 @@ public class RNReactNativeStripeTerminalModule
     @ReactMethod
     public void createPaymentIntent(int amount, String currency, Promise promise) {
 
-        this.cancelable = null;
-
         PaymentIntentParameters params = new PaymentIntentParameters.Builder()
                 .setAmount(amount)
                 .setCurrency(currency)
@@ -307,7 +297,7 @@ public class RNReactNativeStripeTerminalModule
             return;
         }
 
-        this.cancelable = Terminal.getInstance().collectPaymentMethod(
+        this.cancelableCollect = Terminal.getInstance().collectPaymentMethod(
             this.currentPaymentIntent,
             this,
             new CollectPaymentMethodCallback(this, promise)
@@ -317,26 +307,14 @@ public class RNReactNativeStripeTerminalModule
 
     @ReactMethod
     public void cancelCollectPaymentMethod(Promise promise){
-        if(cancelable == null){
+        if(cancelableCollect == null){
             promise.reject("Error","Nothing to cancel");
         } else {
-            if (!cancelable.isCompleted()) {
-                cancelable.cancel(new Callback() {
-                    @Override
-                    public void onSuccess() {
-                        promise.resolve(true);
-                        cancelable = null;
-                    }
-
-                    @Override
-                    public void onFailure(@Nonnull TerminalException e) {
-                        promise.reject("Error",e.getErrorMessage());
-                        cancelable = null;
-                    }
-                });
+            if (!cancelableCollect.isCompleted()) {
+                cancelableCollect.cancel(new CollectPaymentMethodCancellationCallback(this, promise));
             } else {
                 promise.resolve(true);
-                cancelable = null;
+                cancelableCollect = null;
             }
         }
     }
@@ -396,15 +374,15 @@ public class RNReactNativeStripeTerminalModule
     /**
      * Notify the `Activity` that collecting payment method has been canceled
      */
-    public void onCancelCollectPaymentMethod() {
-
+    public void onCancelCollectPaymentMethod(Promise promise) {
+        promise.resolve(true);
     }
 
     /**
      * Notify the `Activity` that discovery has been canceled
      */
-    public void onCancelDiscovery() {
-
+    public void onCancelDiscovery(Promise promise) {
+        promise.resolve(true);
     }
 
     /**
@@ -431,6 +409,7 @@ public class RNReactNativeStripeTerminalModule
      */
     public void onDiscoverReaders(Promise promise) {
         promise.resolve(true);
+        this.isDiscovering = false;
     }
 
     /**

@@ -14,12 +14,12 @@ public interface TerminalStateManager {
     /**
      * Notify the `Activity` that collecting payment method has been canceled
      */
-     public void onCancelCollectPaymentMethod();
+     public void onCancelCollectPaymentMethod(Promise promise);
 
     /**
      * Notify the `Activity` that discovery has been canceled
      */
-    public void onCancelDiscovery();
+    public void onCancelDiscovery(Promise promise);
 
     /**
      * Notify the `Activity` that a payment method has been collected

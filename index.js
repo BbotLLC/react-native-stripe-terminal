@@ -96,6 +96,8 @@ export default {
   },
 
   async connectReader(serial) {
+    this.cancelDiscovery();
+
     let response = await StripeTerminal.connectReader(serial);
     this.readerConnected = response;
     if (response === true) {

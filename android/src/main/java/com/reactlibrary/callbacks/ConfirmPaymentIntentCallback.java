@@ -23,7 +23,7 @@ public final class ConfirmPaymentIntentCallback implements PaymentIntentCallback
     }
 
     public void onFailure(TerminalException e) {
-        promise.reject(e.getErrorMessage());
+        promise.reject("ConfirmPaymentIntentError", e.getErrorMessage());
         this.manager.onFailure(e);
     }
 

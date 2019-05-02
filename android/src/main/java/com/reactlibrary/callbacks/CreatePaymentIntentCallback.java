@@ -23,7 +23,7 @@ public final class CreatePaymentIntentCallback implements PaymentIntentCallback 
     }
 
     public void onFailure(TerminalException e) {
-        this.promise.reject(e.getErrorMessage());
+        this.promise.reject("CreatePaymentIntentError", e.getErrorMessage());
         this.manager.onFailure(e);
     }
 
