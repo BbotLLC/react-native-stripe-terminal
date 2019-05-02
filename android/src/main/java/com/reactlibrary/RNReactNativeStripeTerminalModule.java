@@ -37,8 +37,6 @@ public class RNReactNativeStripeTerminalModule
 
     private ReactApplicationContext reactContext;
 
-    private Terminal terminal;
-
     private List<Reader> availableReaders;
 
     private Cancelable cancelable;
@@ -50,7 +48,6 @@ public class RNReactNativeStripeTerminalModule
 
         this.reactContext = reactContext;
     }
-
 
 
     @Override
@@ -107,7 +104,7 @@ public class RNReactNativeStripeTerminalModule
         }
 
         if(Build.VERSION.SDK_INT < 21){
-            promise.reject("You need a more recent version of Android");
+            promise.reject("Error","You need a more recent version of Android");
             return;
         }
 
@@ -125,12 +122,12 @@ public class RNReactNativeStripeTerminalModule
             // Pass in the current application context, the desired log level, your token provider, and the listener you created
             Terminal.initTerminal(reactContext, LogLevel.VERBOSE, tokenProvider, listener);
 
-            this.terminal = Terminal.getInstance();
+            Terminal terminal = Terminal.getInstance();
 
             promise.resolve(true);
 
         } catch (TerminalException e) {
-            promise.reject(e.getErrorMessage());
+            promise.reject("Error",e.getErrorMessage());
         }
     }
 
@@ -138,7 +135,7 @@ public class RNReactNativeStripeTerminalModule
     public void discoverReaders(int timeout, Promise promise) {
 
         if(!_isInitialized()){
-            promise.reject("error", "Terminal instance not initialized");
+            promise.reject("Error", "Terminal instance not initialized");
             return;
         }
 
@@ -153,7 +150,7 @@ public class RNReactNativeStripeTerminalModule
                 new DiscoveryCallback(this, promise)
             );
         } catch(Exception err){
-            promise.reject(err.getMessage());
+            promise.reject("Error",err.getMessage());
         }
 
         // todo - handle this promise in DiscoveryCallbacks?
@@ -163,7 +160,7 @@ public class RNReactNativeStripeTerminalModule
     @ReactMethod
     public void cancelDiscovery(Promise promise){
         if(cancelable == null){
-            promise.reject("Nothing to cancel");
+            promise.reject("Error","Nothing to cancel");
         } else {
             if(cancelable.isCompleted()){
                 promise.resolve(true);
@@ -178,7 +175,7 @@ public class RNReactNativeStripeTerminalModule
 
                     @Override
                     public void onFailure(@Nonnull TerminalException e) {
-                        promise.reject(e.getErrorMessage());
+                        promise.reject("Error",e.getErrorMessage());
                         cancelable = null;
                     }
                 });
@@ -203,10 +200,10 @@ public class RNReactNativeStripeTerminalModule
                 }
                 terminal.connectReader(reader, new ConnectionCallback(this, promise));
             } catch(Exception exception){
-                promise.reject(exception.getMessage());
+                promise.reject("Error",exception.getMessage());
             }
         } else {
-            promise.reject("Could not connect to reader");
+            promise.reject("Error","Could not connect to reader");
         }
     }
 
@@ -218,7 +215,7 @@ public class RNReactNativeStripeTerminalModule
         if(reader != null){
             terminal.disconnectReader(new DisconnectCallback(this, promise));
         } else {
-            promise.reject("No reader connected");
+            promise.reject("Error","No reader connected");
         }
     }
 
@@ -270,12 +267,12 @@ public class RNReactNativeStripeTerminalModule
 
                 @Override
                 public void onFailure(@Nonnull TerminalException e) {
-                    promise.reject(e.getErrorMessage());
+                    promise.reject("Error",e.getErrorMessage());
                 }
             });
 
         } catch(Exception error){
-            promise.reject(error.getMessage());
+            promise.reject("Error",error.getMessage());
         }
     }
 
@@ -306,7 +303,7 @@ public class RNReactNativeStripeTerminalModule
     @ReactMethod
     public void collectPaymentMethod(Promise promise) {
         if (this.currentPaymentIntent == null) {
-            promise.reject("No existing paymentIntent found");
+            promise.reject("Error","No existing paymentIntent found");
             return;
         }
 
@@ -321,7 +318,7 @@ public class RNReactNativeStripeTerminalModule
     @ReactMethod
     public void cancelCollectPaymentMethod(Promise promise){
         if(cancelable == null){
-            promise.reject("Nothing to cancel");
+            promise.reject("Error","Nothing to cancel");
         } else {
             if (!cancelable.isCompleted()) {
                 cancelable.cancel(new Callback() {
@@ -333,7 +330,7 @@ public class RNReactNativeStripeTerminalModule
 
                     @Override
                     public void onFailure(@Nonnull TerminalException e) {
-                        promise.reject(e.getErrorMessage());
+                        promise.reject("Error",e.getErrorMessage());
                         cancelable = null;
                     }
                 });
