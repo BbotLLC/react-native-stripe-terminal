@@ -136,6 +136,12 @@ export default {
   on(event, fn) {
     if (!events[event]) events[event] = [fn];
     else events[event].push(fn);
+
+    return {
+      event: event,
+      fn: fn,
+      remove: () => { this.off(event, fn)}
+    };
   },
 
   off(event, fn) {
