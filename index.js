@@ -134,13 +134,14 @@ export default {
   },
 
   on(event, fn) {
+    let self = this;
     if (!events[event]) events[event] = [fn];
     else events[event].push(fn);
 
     return {
       event: event,
       fn: fn,
-      remove: () => { this.off(event, fn)}
+      remove() { self.off(event, fn)}
     };
   },
 
