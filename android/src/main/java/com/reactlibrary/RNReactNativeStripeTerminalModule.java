@@ -156,6 +156,7 @@ public class RNReactNativeStripeTerminalModule
             );
         } catch(Exception err){
             this.isDiscovering = false;
+            cancelableDiscovery = null;
             promise.reject("Error",err.getMessage());
         }
 
@@ -383,6 +384,7 @@ public class RNReactNativeStripeTerminalModule
      */
     public void onCancelDiscovery(Promise promise) {
         promise.resolve(true);
+        cancelableDiscovery = null;
     }
 
     /**
@@ -410,6 +412,7 @@ public class RNReactNativeStripeTerminalModule
     public void onDiscoverReaders(Promise promise) {
         promise.resolve(true);
         this.isDiscovering = false;
+        cancelableDiscovery = null;
     }
 
     /**
