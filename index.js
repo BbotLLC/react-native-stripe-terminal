@@ -88,7 +88,7 @@ export default {
   },
 
   async cancelDiscovery(){
-    return await StripeTerminal.cancelDiscovery().catch(err => {});
+    return await StripeTerminal.cancelDiscovery();
   },
 
   async destroyListeners() {
