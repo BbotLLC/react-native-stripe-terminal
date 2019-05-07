@@ -167,7 +167,7 @@ public class RNReactNativeStripeTerminalModule
     @ReactMethod
     public void cancelDiscovery(Promise promise){
         if(cancelableDiscovery == null){
-            promise.reject("Error","Nothing to cancel");
+            promise.resolve(true);
         } else {
             if(cancelableDiscovery.isCompleted()){
                 promise.resolve(true);
