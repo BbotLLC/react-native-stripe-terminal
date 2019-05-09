@@ -112,7 +112,6 @@ public class RNReactNativeStripeTerminalModule
         }
 
         try {
-
             String url = options.getString("url");
             String authToken = options.getString("authToken");
 
@@ -130,7 +129,9 @@ public class RNReactNativeStripeTerminalModule
             promise.resolve(true);
 
         } catch (TerminalException e) {
-            promise.reject("Error",e.getErrorMessage());
+            promise.reject("TerminalException", e.getErrorMessage());
+        } catch (Exception e){
+            promise.reject("Exception", e.getMessage());
         }
     }
 
