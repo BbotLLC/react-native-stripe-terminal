@@ -1,4 +1,4 @@
-package com.reactlibrary;
+package menu.bbot.reactnativestripeterminal;
 
 import com.stripe.stripeterminal.ConnectionTokenCallback;
 import com.stripe.stripeterminal.ConnectionTokenException;
@@ -7,10 +7,6 @@ import com.stripe.stripeterminal.ConnectionTokenProvider;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
-
-import com.facebook.react.bridge.ReadableArray;
-import com.facebook.react.bridge.ReadableMap;
-import com.facebook.react.bridge.ReadableType;
 
 import org.json.JSONObject;
 

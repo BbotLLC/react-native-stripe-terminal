@@ -1,12 +1,10 @@
-package com.reactlibrary;
+package menu.bbot.reactnativestripeterminal;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import com.facebook.react.ReactInstanceManager;
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.Promise;
-import com.facebook.react.bridge.ReactContext;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
@@ -18,21 +16,25 @@ import com.facebook.react.modules.core.DeviceEventManagerModule;
 
 import com.stripe.stripeterminal.*;
 
-import com.reactlibrary.DiscoveryEventListener;
-import com.reactlibrary.TerminalEventListener;
-import com.reactlibrary.TokenProvider;
-import com.reactlibrary.callbacks.*;
+import menu.bbot.reactnativestripeterminal.callbacks.*;
 
 import java.util.List;
 import java.util.HashMap;
 import java.util.Map;
 
-import android.nfc.NfcAdapter;
 import android.os.Build;
-import android.os.CancellationSignal;
 import android.util.Log;
 
-public class RNReactNativeStripeTerminalModule
+import menu.bbot.reactnativestripeterminal.callbacks.CollectPaymentMethodCallback;
+import menu.bbot.reactnativestripeterminal.callbacks.CollectPaymentMethodCancellationCallback;
+import menu.bbot.reactnativestripeterminal.callbacks.ConfirmPaymentIntentCallback;
+import menu.bbot.reactnativestripeterminal.callbacks.ConnectionCallback;
+import menu.bbot.reactnativestripeterminal.callbacks.CreatePaymentIntentCallback;
+import menu.bbot.reactnativestripeterminal.callbacks.DisconnectCallback;
+import menu.bbot.reactnativestripeterminal.callbacks.DiscoveryCallback;
+import menu.bbot.reactnativestripeterminal.callbacks.DiscoveryCancellationCallback;
+
+public class RNStripeTerminalModule
         extends ReactContextBaseJavaModule
         implements TerminalStateManager, ReaderDisplayListener {
 
@@ -44,9 +46,11 @@ public class RNReactNativeStripeTerminalModule
     private Cancelable cancelableCollect;
     private Boolean isDiscovering;
 
+    public ReaderSoftwareUpdate update;
+
     private PaymentIntent currentPaymentIntent;
 
-    public RNReactNativeStripeTerminalModule(ReactApplicationContext reactContext) {
+    public RNStripeTerminalModule(ReactApplicationContext reactContext) {
         super(reactContext);
 
         this.reactContext = reactContext;
@@ -416,6 +420,9 @@ public class RNReactNativeStripeTerminalModule
         cancelableDiscovery = null;
     }
 
+
+
+
     /**
      * Notify the `Activity` that a [TerminalException] has been thrown
      */
@@ -469,6 +476,28 @@ public class RNReactNativeStripeTerminalModule
         getReactApplicationContext()
             .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
             .emit("StripeTerminalEvent", returnObj);
+    }
+
+    @ReactMethod
+    public void checkForUpdate(Promise promise){
+        ReactContextBaseJavaModule manager = this;
+
+        if(_isInitialized()){
+            Terminal.getInstance().checkForUpdate(new ReaderSoftwareUpdateCallback() {
+                @Override
+                public void onSuccess(ReaderSoftwareUpdate update) {
+                    manager.update = update;
+
+                }
+
+                @Override
+                public void onFailure(@Nonnull TerminalException e) {
+
+                }
+            });
+        } else {
+            promise.reject("TerminalException", "Terminal Instance not Initialized");
+        }
     }
 
 }

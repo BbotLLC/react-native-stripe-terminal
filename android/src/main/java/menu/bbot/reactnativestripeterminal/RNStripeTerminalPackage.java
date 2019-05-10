@@ -1,5 +1,5 @@
 
-package com.reactlibrary;
+package menu.bbot.reactnativestripeterminal;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -12,12 +12,12 @@ import com.facebook.react.uimanager.ViewManager;
 import com.facebook.react.bridge.JavaScriptModule;
 
 
-public class RNReactNativeStripeTerminalPackage implements ReactPackage {
+public class RNStripeTerminalPackage implements ReactPackage {
 
     @Override
     public List<NativeModule> createNativeModules(ReactApplicationContext reactContext) {
       return Arrays.<NativeModule>asList(
-          new RNReactNativeStripeTerminalModule(reactContext)
+          new RNStripeTerminalModule(reactContext)
       );
     }
 

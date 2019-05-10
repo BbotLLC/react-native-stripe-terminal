@@ -1,13 +1,13 @@
-package com.reactlibrary;
+package menu.bbot.reactnativestripeterminal;
 
 import android.util.Log;
 import com.stripe.stripeterminal.*;
 
 class TerminalEventListener implements TerminalListener {
 
-    private final RNReactNativeStripeTerminalModule manager;
+    private final RNStripeTerminalModule manager;
 
-    public TerminalEventListener (RNReactNativeStripeTerminalModule manager){
+    public TerminalEventListener (RNStripeTerminalModule manager){
         super();
         this.manager = manager;
     }

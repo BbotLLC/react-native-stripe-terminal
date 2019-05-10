@@ -1,8 +1,7 @@
-package com.reactlibrary;
+package menu.bbot.reactnativestripeterminal;
 
 import com.stripe.stripeterminal.PaymentIntent;
 import com.stripe.stripeterminal.Reader;
-import com.stripe.stripeterminal.Terminal;
 import com.stripe.stripeterminal.TerminalException;
 import com.facebook.react.bridge.Promise;
 

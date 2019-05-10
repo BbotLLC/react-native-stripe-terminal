@@ -1,7 +1,7 @@
-package com.reactlibrary.callbacks;
+package menu.bbot.reactnativestripeterminal.callbacks;
 
 import com.stripe.stripeterminal.*;
-import com.reactlibrary.TerminalStateManager;
+import menu.bbot.reactnativestripeterminal.TerminalStateManager;
 import com.facebook.react.bridge.Promise;
 
 /**
