@@ -486,8 +486,7 @@ public class RNStripeTerminalModule
             Terminal.getInstance().checkForUpdate(new ReaderSoftwareUpdateCallback() {
                 @Override
                 public void onSuccess(ReaderSoftwareUpdate update) {
-                    manager.update = update;
-
+                   // todo implement
                 }
 
                 @Override
