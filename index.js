@@ -44,6 +44,9 @@ export default {
         case 'updateDiscoveredReaders':
           if (this._discoverReadersCB) this._discoverReadersCB(data.data);
           break;
+        case 'updateProgress':
+          if(this._progressCallback) this._progressCallback(data.data);
+        break;
         case 'ConnectionStatusChange':
           switch (data.data) {
             case 'CONNECTING':
@@ -131,6 +134,17 @@ export default {
 
   async readReusableCard(){
     return await StripeTerminal.readReusableCard();
+  },
+
+  async checkForUpdate(){
+    this._progressCallback = null;
+    return await StripeTerminal.checkForUpdate();
+  },
+
+  async installUpdate(progressCallback){
+    this._progressCallback = progressCallback;
+
+    return await StripeTerminal.installUpdate();
   },
 
   on(event, fn) {

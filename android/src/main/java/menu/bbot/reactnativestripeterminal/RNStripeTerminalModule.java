@@ -44,9 +44,12 @@ public class RNStripeTerminalModule
 
     private Cancelable cancelableDiscovery;
     private Cancelable cancelableCollect;
+    private Cancelable cancelableUpdate;
+    private Cancelable cancelableInstall;
+
     private Boolean isDiscovering;
 
-    public ReaderSoftwareUpdate update;
+    public ReaderSoftwareUpdate availableUpdate;
 
     private PaymentIntent currentPaymentIntent;
 
@@ -480,23 +483,57 @@ public class RNStripeTerminalModule
 
     @ReactMethod
     public void checkForUpdate(Promise promise){
-        ReactContextBaseJavaModule manager = this;
+        RNStripeTerminalModule manager = this;
 
         if(_isInitialized()){
-            Terminal.getInstance().checkForUpdate(new ReaderSoftwareUpdateCallback() {
+
+            ReaderSoftwareUpdateCallback callback = new ReaderSoftwareUpdateCallback() {
                 @Override
                 public void onSuccess(ReaderSoftwareUpdate update) {
-                   // todo implement
+                    // todo implement
+                    manager.availableUpdate = update;
+                    promise.resolve(true);
                 }
 
                 @Override
                 public void onFailure(@Nonnull TerminalException e) {
-
+                    promise.resolve(false);
                 }
-            });
+            };
+
+            cancelableUpdate = Terminal.getInstance().checkForUpdate(callback);
+
         } else {
             promise.reject("TerminalException", "Terminal Instance not Initialized");
         }
+    }
+
+    @ReactMethod
+    public void installUpdate(Promise promise){
+        RNStripeTerminalModule manager = this;
+
+        ReaderSoftwareUpdateListener listener = new ReaderSoftwareUpdateListener() {
+            @Override
+            public void onReportReaderSoftwareUpdateProgress(float progress) {
+                emit("updateProgress", progress);
+            }
+        };
+
+        Callback callback = new Callback() {
+            @Override
+            public void onSuccess() {
+                manager.availableUpdate = null;
+                promise.resolve(true);
+            }
+
+            @Override
+            public void onFailure(@Nonnull TerminalException e) {
+                promise.reject("UpdateError", "The update failed to install");
+            }
+        };
+
+        cancelableInstall = Terminal.getInstance().installUpdate(this.availableUpdate, listener, callback);
+
     }
 
 }
