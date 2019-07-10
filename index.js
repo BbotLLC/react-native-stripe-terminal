@@ -12,6 +12,7 @@ let _configured = false;
 export default {
 
   readerConnected: false,
+  readerStatus: null,
 
   // test to see if Terminal instance is already initialized
   async isInitialized() {
@@ -36,8 +37,6 @@ export default {
     _configured = true;
     
     DeviceEventEmitter.addListener("StripeTerminalEvent", data => {
-      console.log("Stripe Terminal Event: ");
-      console.log(data.event, data.data);
 
       // not sure if we need any of this...
       switch (data.event) {
@@ -48,6 +47,7 @@ export default {
           if(this._progressCallback) this._progressCallback(data.data);
         break;
         case 'ConnectionStatusChange':
+          this.readerStatus = data.data;
           switch (data.data) {
             case 'CONNECTING':
               this.readerConnecting = true;
@@ -73,7 +73,8 @@ export default {
   async getConnectedReader() {
     let reader = await StripeTerminal.getConnectedReader();
     this.readerConnected = !!reader;
-    this.trigger('ConnectionStatusChange', reader ? "CONNECTED" : "NOT_CONNECTED");
+    this.readerStatus = reader ? "CONNECTED" : "NOT_CONNECTED";
+    this.trigger('ConnectionStatusChange', this.readerStatus);
     return reader;
   },
 
