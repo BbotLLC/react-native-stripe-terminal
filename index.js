@@ -32,7 +32,7 @@ export default {
     return isInitialized;
   },
 
-  configureListeners() {
+  configureListeners: () => {
     if(_configured) return;
     _configured = true;
     
@@ -91,7 +91,7 @@ export default {
 
   },
 
-  async cancelDiscovery(){
+  cancelDiscovery: async () => {
     return await StripeTerminal.cancelDiscovery();
   },
 
@@ -175,7 +175,7 @@ export default {
           try {
             fn.apply(null, args);
           } catch (err) {
-            console.error("Event listener failed to run. ", err);
+            console.error("Stripe Event listener failed to run. ", err);
             this.off(event, fn);
           }
         }
