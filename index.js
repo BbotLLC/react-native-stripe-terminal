@@ -32,7 +32,7 @@ export default {
     return isInitialized;
   },
 
-  configureListeners: () => {
+  configureListeners() {
     if(_configured) return;
     _configured = true;
     
@@ -91,7 +91,7 @@ export default {
 
   },
 
-  cancelDiscovery: async () => {
+  async cancelDiscovery() {
     return await StripeTerminal.cancelDiscovery();
   },
 
@@ -100,8 +100,6 @@ export default {
   },
 
   async connectReader(serial) {
-    this.cancelDiscovery();
-
     let response = await StripeTerminal.connectReader(serial);
     this.readerConnected = response;
     if (response === true) {
