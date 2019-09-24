@@ -113,10 +113,10 @@ export default {
     return  await StripeTerminal.disconnectReader();
   },
 
-  async createPaymentIntent(amount, currency) {
+  async createPaymentIntent(amount, currency, statementDescriptor) {
     if (!currency) currency = "usd";
 
-    return await StripeTerminal.createPaymentIntent(amount, currency);
+    return await StripeTerminal.createPaymentIntent(amount, currency, statementDescriptor);
   },
 
   async collectPaymentMethod() {

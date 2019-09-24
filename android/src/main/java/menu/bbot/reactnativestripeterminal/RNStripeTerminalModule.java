@@ -278,12 +278,17 @@ public class RNStripeTerminalModule
     }
 
     @ReactMethod
-    public void createPaymentIntent(int amount, String currency, Promise promise) {
+    public void createPaymentIntent(int amount, String currency, String statementDescriptor, Promise promise) {
 
-        PaymentIntentParameters params = new PaymentIntentParameters.Builder()
+        PaymentIntentParameters.Builder builder = new PaymentIntentParameters.Builder()
                 .setAmount(amount)
-                .setCurrency(currency)
-                .build();
+                .setCurrency(currency);
+
+        if(!statementDescriptor.isEmpty()) {
+            builder.setStatementDescriptor(statementDescriptor);
+        }
+
+        PaymentIntentParameters params = builder.build();
 
         Terminal.getInstance().createPaymentIntent(params, new CreatePaymentIntentCallback(this, promise));
     }
