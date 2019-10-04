@@ -2,6 +2,8 @@ package menu.bbot.reactnativestripeterminal;
 
 import android.util.Log;
 import com.stripe.stripeterminal.*;
+import com.stripe.stripeterminal.callable.TerminalListener;
+import com.stripe.stripeterminal.model.external.*;
 
 class TerminalEventListener implements TerminalListener {
 

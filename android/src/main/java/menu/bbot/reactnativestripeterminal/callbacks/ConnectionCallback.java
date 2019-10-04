@@ -3,6 +3,9 @@ package menu.bbot.reactnativestripeterminal.callbacks;
 import com.stripe.stripeterminal.*;
 import menu.bbot.reactnativestripeterminal.TerminalStateManager;
 import com.facebook.react.bridge.Promise;
+import com.stripe.stripeterminal.callable.ReaderCallback;
+import com.stripe.stripeterminal.model.external.Reader;
+import com.stripe.stripeterminal.model.external.TerminalException;
 
 /**
  * A [ReaderCallback] that notifies the [TerminalStateManager] that connection has completed

@@ -15,6 +15,26 @@ import com.facebook.react.bridge.WritableNativeMap;
 import com.facebook.react.modules.core.DeviceEventManagerModule;
 
 import com.stripe.stripeterminal.*;
+import com.stripe.stripeterminal.callable.Callback;
+import com.stripe.stripeterminal.callable.Cancelable;
+import com.stripe.stripeterminal.callable.PaymentMethodCallback;
+import com.stripe.stripeterminal.callable.ReaderDisplayListener;
+import com.stripe.stripeterminal.callable.ReaderSoftwareUpdateCallback;
+import com.stripe.stripeterminal.callable.ReaderSoftwareUpdateListener;
+import com.stripe.stripeterminal.callable.TerminalListener;
+import com.stripe.stripeterminal.log.LogLevel;
+import com.stripe.stripeterminal.model.external.CardDetails;
+import com.stripe.stripeterminal.model.external.DeviceType;
+import com.stripe.stripeterminal.model.external.DiscoveryConfiguration;
+import com.stripe.stripeterminal.model.external.PaymentIntent;
+import com.stripe.stripeterminal.model.external.PaymentIntentParameters;
+import com.stripe.stripeterminal.model.external.PaymentMethod;
+import com.stripe.stripeterminal.model.external.ReadReusableCardParameters;
+import com.stripe.stripeterminal.model.external.Reader;
+import com.stripe.stripeterminal.model.external.ReaderDisplayMessage;
+import com.stripe.stripeterminal.model.external.ReaderInputOptions;
+import com.stripe.stripeterminal.model.external.ReaderSoftwareUpdate;
+import com.stripe.stripeterminal.model.external.TerminalException;
 
 import menu.bbot.reactnativestripeterminal.callbacks.*;
 
@@ -24,6 +44,8 @@ import java.util.Map;
 
 import android.os.Build;
 import android.util.Log;
+
+import org.jetbrains.annotations.NotNull;
 
 import menu.bbot.reactnativestripeterminal.callbacks.CollectPaymentMethodCallback;
 import menu.bbot.reactnativestripeterminal.callbacks.CollectPaymentMethodCancellationCallback;
@@ -40,7 +62,7 @@ public class RNStripeTerminalModule
 
     private ReactApplicationContext reactContext;
 
-    private List<Reader> availableReaders;
+    private List<? extends Reader> availableReaders;
 
     private Cancelable cancelableDiscovery;
     private Cancelable cancelableCollect;
@@ -228,7 +250,7 @@ public class RNStripeTerminalModule
         return null;
     }
 
-    public void setAvailableReaders(List<Reader> list) {
+    public void setAvailableReaders(@NotNull List<? extends Reader> list) {
         availableReaders = list;
 
         WritableArray wa = Arguments.createArray();
@@ -455,7 +477,7 @@ public class RNStripeTerminalModule
         pm.putString("id", paymentMethod.getId());
         pm.putString("customer", paymentMethod.getCustomer());
 
-        PaymentMethod.CardDetails cardDetails = paymentMethod.getCardDetails();
+        CardDetails cardDetails = paymentMethod.getCardDetails();
 
         WritableMap cd = Arguments.createMap();
         cd.putString("brand", cardDetails.getBrand());

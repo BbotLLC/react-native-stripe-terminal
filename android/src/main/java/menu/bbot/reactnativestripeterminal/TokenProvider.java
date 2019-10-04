@@ -1,9 +1,9 @@
 package menu.bbot.reactnativestripeterminal;
 
-import com.stripe.stripeterminal.ConnectionTokenCallback;
-import com.stripe.stripeterminal.ConnectionTokenException;
-import com.stripe.stripeterminal.ConnectionTokenProvider;
-//import com.stripe.model.terminal.ConnectionToken;
+import com.stripe.stripeterminal.callable.ConnectionTokenCallback;
+import com.stripe.stripeterminal.callable.ConnectionTokenProvider;
+import com.stripe.stripeterminal.model.external.ConnectionTokenException;
+
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
