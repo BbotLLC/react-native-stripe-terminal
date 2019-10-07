@@ -73,6 +73,7 @@ dependencies {
     api "com.google.android.material:material:$materialVersion"
     implementation "androidx.legacy:legacy-support-v4:$legacysupportVersion"
     implementation "androidx.appcompat:appcompat:$appcompatVersion"
+    implementation "androidx.room:room-runtime:2.1.0"
     //implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     implementation "androidx.constraintlayout:constraintlayout:$constraintlayoutVersion"
     implementation "com.facebook.stetho:stetho:$stethoVersion"

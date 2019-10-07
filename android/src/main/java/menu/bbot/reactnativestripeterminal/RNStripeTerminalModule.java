@@ -98,19 +98,10 @@ public class RNStripeTerminalModule
 
     @ReactMethod
     public void isInitialized(Promise promise) {
-        promise.resolve(_isInitialized());
+        promise.resolve(Terminal.isInitialized());
     }
 
-    private boolean _isInitialized(){
-        try {
-            Terminal t = Terminal.getInstance();
-            return t != null;
-        } catch(Exception e){
-            return false;
-        }
-    }
-
-    @ReactMethod
+       @ReactMethod
     public void getConnectedReader(Promise promise) {
         try {
             Terminal terminal = Terminal.getInstance();
@@ -130,7 +121,7 @@ public class RNStripeTerminalModule
     @ReactMethod
     public void init(ReadableMap options, Promise promise) {
 
-        if(_isInitialized()){
+        if(Terminal.isInitialized()){
             promise.resolve(true);
             return;
         }
@@ -167,7 +158,7 @@ public class RNStripeTerminalModule
     @ReactMethod
     public void discoverReaders(int timeout, Promise promise) {
 
-        if(!_isInitialized()){
+        if(!Terminal.isInitialized()){
             promise.reject("Error", "Terminal instance not initialized");
             return;
         }
@@ -512,7 +503,7 @@ public class RNStripeTerminalModule
     public void checkForUpdate(Promise promise){
         RNStripeTerminalModule manager = this;
 
-        if(_isInitialized()){
+        if(Terminal.isInitialized()){
 
             ReaderSoftwareUpdateCallback callback = new ReaderSoftwareUpdateCallback() {
                 @Override
