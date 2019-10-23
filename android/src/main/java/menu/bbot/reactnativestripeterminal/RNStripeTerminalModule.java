@@ -42,6 +42,7 @@ import java.util.List;
 import java.util.HashMap;
 import java.util.Map;
 
+import android.app.Activity;
 import android.os.Build;
 import android.util.Log;
 
@@ -61,6 +62,7 @@ public class RNStripeTerminalModule
         implements TerminalStateManager, ReaderDisplayListener {
 
     private ReactApplicationContext reactContext;
+  //  private final TerminalLifecycleObserver observer = TerminalLifecycleObserver.Companion.getInstance();
 
     private List<? extends Reader> availableReaders;
 
@@ -75,10 +77,11 @@ public class RNStripeTerminalModule
 
     private PaymentIntent currentPaymentIntent;
 
-    public RNStripeTerminalModule(ReactApplicationContext reactContext) {
+    public RNStripeTerminalModule(ReactApplicationContext reactContext, Activity activity) {
         super(reactContext);
 
         this.reactContext = reactContext;
+       //reactContext.addLifecycleEventListener(observer);
     }
 
 
@@ -91,8 +94,6 @@ public class RNStripeTerminalModule
     @Override
     public Map<String, Object> getConstants() {
         final Map<String, Object> constants = new HashMap<>();
-        //constants.put(DURATION_SHORT_KEY, );
-        //constants.put(DURATION_LONG_KEY, Toast.LENGTH_LONG);
         return constants;
     }
 
