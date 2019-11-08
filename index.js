@@ -84,10 +84,15 @@ export default {
    * @param callbackFn - The callbackFn is passed the readers array everytime we poll for new readers
    * @returns {Promise<*>}
    */
-  async discoverReaders(timeout, callbackFn) {
+  async discoverReaders(options, callbackFn) {
+    if(typeof options !== 'object'){
+      options = {
+        timeout: options // backwards compatibility
+      }
+    }
 
     this._discoverReadersCB = callbackFn;
-    return await StripeTerminal.discoverReaders(timeout);
+    return await StripeTerminal.discoverReaders(options);
 
   },
 
