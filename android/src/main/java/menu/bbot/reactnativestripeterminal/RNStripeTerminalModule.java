@@ -159,14 +159,13 @@ public class RNStripeTerminalModule
     @ReactMethod
     public void discoverReaders(ReadableMap options, Promise promise) {
 
-        if(!_isInitialized()){
+        if(!Terminal.isInitialized()){
             promise.reject("Error", "Terminal instance not initialized");
             return;
         }
 
-        String timeout = options.hasKey("timeout") ? options.getInt("timeout") : 0;
-        String simulated = options.hasKey("simulated") ? options.getBoolean("simulated") : false;
-
+        int timeout = options.hasKey("timeout") ? options.getInt("timeout") : 0;
+        boolean simulated = options.hasKey("simulated") ? options.getBoolean("simulated") : false;
 
         this.isDiscovering = true;
 
