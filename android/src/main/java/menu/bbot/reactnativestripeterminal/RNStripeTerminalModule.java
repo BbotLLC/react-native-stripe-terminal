@@ -157,17 +157,21 @@ public class RNStripeTerminalModule
     }
 
     @ReactMethod
-    public void discoverReaders(int timeout, Promise promise) {
+    public void discoverReaders(ReadableMap options, Promise promise) {
 
-        if(!Terminal.isInitialized()){
+        if(!_isInitialized()){
             promise.reject("Error", "Terminal instance not initialized");
             return;
         }
 
+        String timeout = options.hasKey("timeout") ? options.getInt("timeout") : 0;
+        String simulated = options.hasKey("simulated") ? options.getBoolean("simulated") : false;
+
+
         this.isDiscovering = true;
 
         try {
-            DiscoveryConfiguration config = new DiscoveryConfiguration(timeout, DeviceType.CHIPPER_2X, false);
+            DiscoveryConfiguration config = new DiscoveryConfiguration(timeout, DeviceType.CHIPPER_2X, simulated);
             DiscoveryEventListener discoveryEventListener = new DiscoveryEventListener(this);
 
             Terminal terminal = Terminal.getInstance();
