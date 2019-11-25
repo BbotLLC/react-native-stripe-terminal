@@ -1,6 +1,4 @@
 package menu.bbot.reactnativestripeterminal.callbacks;
-
-import com.stripe.stripeterminal.*;
 import menu.bbot.reactnativestripeterminal.TerminalStateManager;
 import com.facebook.react.bridge.Promise;
 import com.stripe.stripeterminal.callable.PaymentIntentCallback;

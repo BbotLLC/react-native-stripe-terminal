@@ -1,7 +1,6 @@
 package menu.bbot.reactnativestripeterminal.callbacks;
 
 import com.facebook.react.bridge.Promise;
-import com.stripe.stripeterminal.*;
 import com.stripe.stripeterminal.callable.Callback;
 import com.stripe.stripeterminal.model.external.TerminalException;
 

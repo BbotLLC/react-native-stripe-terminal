@@ -14,7 +14,7 @@ import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.bridge.WritableNativeMap;
 import com.facebook.react.modules.core.DeviceEventManagerModule;
 
-import com.stripe.stripeterminal.*;
+import com.stripe.stripeterminal.Terminal;
 import com.stripe.stripeterminal.callable.Callback;
 import com.stripe.stripeterminal.callable.Cancelable;
 import com.stripe.stripeterminal.callable.PaymentMethodCallback;
@@ -36,7 +36,6 @@ import com.stripe.stripeterminal.model.external.ReaderInputOptions;
 import com.stripe.stripeterminal.model.external.ReaderSoftwareUpdate;
 import com.stripe.stripeterminal.model.external.TerminalException;
 
-import menu.bbot.reactnativestripeterminal.callbacks.*;
 
 import java.util.List;
 import java.util.HashMap;
