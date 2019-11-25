@@ -77,7 +77,7 @@ public class RNStripeTerminalModule
 
     private PaymentIntent currentPaymentIntent;
 
-    public RNStripeTerminalModule(ReactApplicationContext reactContext, Activity activity) {
+    public RNStripeTerminalModule(ReactApplicationContext reactContext) {
         super(reactContext);
 
         this.reactContext = reactContext;
