@@ -101,8 +101,12 @@ public class RNStripeTerminalModule
         promise.resolve(Terminal.isInitialized());
     }
 
-       @ReactMethod
+   @ReactMethod
     public void getConnectedReader(Promise promise) {
+        if(!Terminal.isInitialized()){
+            promise.resolve(false);
+            return;
+        }
         try {
             Terminal terminal = Terminal.getInstance();
             Reader reader = terminal.getConnectedReader();
