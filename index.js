@@ -11,6 +11,16 @@ let _configured = false;
 
 export default {
 
+  settings: {
+    url: '',
+    authToken: '',
+    scanTimeout: 120,
+    showSimulated: false,
+    autoReconnect: true
+  },
+
+  _lastConnectedReader: null,
+
   readerConnected: false,
   readerStatus: null,
 
@@ -23,6 +33,8 @@ export default {
   },
 
   async init(settings) {
+    this.settings = settings;
+
     let isInitialized = await StripeTerminal.init(settings);
 
     if (isInitialized) {
@@ -61,13 +73,23 @@ export default {
           }
           break;
         case 'UnexpectedDisconnect':
-          // start scanning?
-          // if(settings.autoreconnect)...
+          if (this.settings.autoReconnect && this._lastConnectedReader){
+            this.discoverReaders(this.settings, this.autoReconnectReader)
+          }
           break;
       }
 
       this.trigger(data.event, data.data);
     });
+  },
+
+  autoReconnectReader(readers){
+    if(readers.length > 0){
+      let reader = readers.find(r => r.serial === this._lastConnectedReader);
+      if(reader){
+        this.connectReader(reader.serial);
+      }
+    }
   },
 
   async getConnectedReader() {
@@ -80,7 +102,7 @@ export default {
 
   /**
    *
-   * @param timeout
+   * @param options
    * @param callbackFn - The callbackFn is passed the readers array everytime we poll for new readers
    * @returns {Promise<*>}
    */
@@ -106,6 +128,7 @@ export default {
 
   async connectReader(serial) {
     let response = await StripeTerminal.connectReader(serial);
+    this._lastConnectedReader = serial;
     this.readerConnected = response;
     if (response === true) {
       this._discoverReadersCB = null;
