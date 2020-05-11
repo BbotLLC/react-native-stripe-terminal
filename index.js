@@ -15,7 +15,7 @@ export default {
     url: '',
     authToken: '',
     scanTimeout: 120,
-    showSimulated: false,
+    simulated: false,
     autoReconnect: true,
     defaultReader: null
   },
