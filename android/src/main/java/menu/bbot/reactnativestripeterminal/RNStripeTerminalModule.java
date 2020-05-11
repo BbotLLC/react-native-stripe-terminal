@@ -37,6 +37,7 @@ import com.stripe.stripeterminal.model.external.ReaderSoftwareUpdate;
 import com.stripe.stripeterminal.model.external.TerminalException;
 
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.HashMap;
 import java.util.Map;
@@ -80,6 +81,7 @@ public class RNStripeTerminalModule
         super(reactContext);
 
         this.reactContext = reactContext;
+        availableReaders = new ArrayList<Reader>();
        //reactContext.addLifecycleEventListener(observer);
     }
 
@@ -130,11 +132,6 @@ public class RNStripeTerminalModule
             return;
         }
 
-        if(Build.VERSION.SDK_INT < 21){
-            promise.reject("Error","You need a more recent version of Android");
-            return;
-        }
-
         try {
             String url = options.getString("url");
             String authToken = options.getString("authToken");
@@ -168,7 +165,7 @@ public class RNStripeTerminalModule
         }
 
         int timeout = options.hasKey("timeout") ? options.getInt("timeout") : 0;
-        boolean simulated = options.hasKey("simulated") ? options.getBoolean("simulated") : false;
+        boolean simulated = options.hasKey("simulated") && options.getBoolean("simulated");
 
         this.isDiscovering = true;
 

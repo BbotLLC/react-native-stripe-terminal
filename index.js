@@ -16,7 +16,8 @@ export default {
     authToken: '',
     scanTimeout: 120,
     showSimulated: false,
-    autoReconnect: true
+    autoReconnect: true,
+    defaultReader: null
   },
 
   _lastConnectedReader: null,
@@ -39,6 +40,11 @@ export default {
 
     if (isInitialized) {
       this.configureListeners();
+
+      if(settings.defaultReader){
+        this._lastConnectedReader = settings.defaultReader;
+        this.discoverReaders(this.settings, this.autoReconnectReader)
+      }
     }
 
     return isInitialized;
@@ -107,11 +113,17 @@ export default {
    * @returns {Promise<*>}
    */
   async discoverReaders(options, callbackFn) {
+    let defaultOptions = {
+        timeout: 120,
+        simulated: false
+    }
     if(typeof options !== 'object'){
       options = {
         timeout: options // backwards compatibility
       }
     }
+
+    Object.assign(defaultOptions, options);
 
     this._discoverReadersCB = callbackFn;
     return await StripeTerminal.discoverReaders(options);
