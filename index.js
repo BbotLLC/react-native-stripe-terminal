@@ -41,10 +41,11 @@ export default {
     if (isInitialized) {
       this.configureListeners();
 
-      if(settings.defaultReader){
+      /*if(settings.defaultReader){
+        console.log('attempting to connect to default reader');
         this._lastConnectedReader = settings.defaultReader;
         this.discoverReaders(this.settings, this.autoReconnectReader)
-      }
+      }*/
     }
 
     return isInitialized;
@@ -53,7 +54,7 @@ export default {
   configureListeners() {
     if(_configured) return;
     _configured = true;
-    
+
     DeviceEventEmitter.addListener("StripeTerminalEvent", data => {
 
       // not sure if we need any of this...
@@ -90,6 +91,7 @@ export default {
   },
 
   autoReconnectReader(readers){
+
     if(readers.length > 0){
       let reader = readers.find(r => r.serial === this._lastConnectedReader);
       if(reader){
@@ -112,7 +114,7 @@ export default {
    * @param callbackFn - The callbackFn is passed the readers array everytime we poll for new readers
    * @returns {Promise<*>}
    */
-  async discoverReaders(options, callbackFn) {
+  async discoverReaders(options, callbackFn = ()=>{}) {
     let defaultOptions = {
         timeout: 120,
         simulated: false
@@ -122,10 +124,18 @@ export default {
         timeout: options // backwards compatibility
       }
     }
-
     Object.assign(defaultOptions, options);
 
-    this._discoverReadersCB = callbackFn;
+    if(options.readerSerial){
+      this._lastConnectedReader = options.readerSerial;
+    }
+
+    let callback = options.readerSerial ? (readers) => {
+      this.autoReconnectReader(readers);
+      callbackFn();
+    } : callbackFn;
+
+    this._discoverReadersCB = callback;
     return await StripeTerminal.discoverReaders(options);
 
   },
