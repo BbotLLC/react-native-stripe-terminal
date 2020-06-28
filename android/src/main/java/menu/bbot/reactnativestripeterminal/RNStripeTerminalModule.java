@@ -534,6 +534,10 @@ public class RNStripeTerminalModule
     public void installUpdate(Promise promise){
         RNStripeTerminalModule manager = this;
 
+        if(manager.availableUpdate == null) {
+            promise.reject("UpdateError", "An internal error occurred. Please contact support");
+        }
+
         ReaderSoftwareUpdateListener listener = new ReaderSoftwareUpdateListener() {
             @Override
             public void onReportReaderSoftwareUpdateProgress(float progress) {
@@ -554,7 +558,7 @@ public class RNStripeTerminalModule
             }
         };
 
-        cancelableInstall = Terminal.getInstance().installUpdate(this.availableUpdate, listener, callback);
+        cancelableInstall = Terminal.getInstance().installUpdate(manager.availableUpdate, listener, callback);
 
     }
 

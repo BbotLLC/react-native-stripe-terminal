@@ -30,9 +30,19 @@
 
 ## Usage
 ```javascript
-import RNReactNativeStripeTerminal from 'react-native-stripe-terminal';
+import Stripe from 'react-native-stripe-terminal';
 
 // TODO: What to do with the module?
-RNReactNativeStripeTerminal;
+
+let isInitialized = await Stripe.isInitialized();
+if(!isInitialized){
+    await Stripe.init({
+        url: // stripe_auth url,
+        authToken: //stripe public auth token
+    });
+
+
+}
+
 ```
   
