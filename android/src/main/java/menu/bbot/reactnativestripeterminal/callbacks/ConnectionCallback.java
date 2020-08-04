@@ -22,7 +22,7 @@ public final class ConnectionCallback implements ReaderCallback {
 
     @Override
     public void onSuccess(@NotNull Reader reader){
-        this.manager.onConnectReader(reader, promise);
+        this.manager.onConnectReader(reader, this.promise);
     }
 
     @Override

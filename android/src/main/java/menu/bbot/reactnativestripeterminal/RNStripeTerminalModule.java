@@ -163,6 +163,11 @@ public class RNStripeTerminalModule
             promise.reject("Error", "Terminal instance not initialized");
             return;
         }
+        Terminal terminal = Terminal.getInstance();
+        Reader connectedReader = terminal.getConnectedReader();
+        if(connectedReader != null){
+            terminal.disconnectReader(new DisconnectCallback(this, null));
+        }
 
         int timeout = options.hasKey("timeout") ? options.getInt("timeout") : 0;
         boolean simulated = options.hasKey("simulated") && options.getBoolean("simulated");
@@ -173,7 +178,6 @@ public class RNStripeTerminalModule
             DiscoveryConfiguration config = new DiscoveryConfiguration(timeout, DeviceType.CHIPPER_2X, simulated);
             DiscoveryEventListener discoveryEventListener = new DiscoveryEventListener(this);
 
-            Terminal terminal = Terminal.getInstance();
             cancelableDiscovery = terminal.discoverReaders(
                 config,
                 discoveryEventListener,
@@ -422,7 +426,7 @@ public class RNStripeTerminalModule
      */
     public void onConnectReader(Reader reader, Promise promise) {
         if(promise != null)
-            promise.resolve(true);
+            promise.resolve(readerToMap(reader));
 
         emit("ConnectionStatusChange", "CONNECTED");
     }
