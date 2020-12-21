@@ -149,13 +149,18 @@ export default {
   },
 
   async connectReader(serial) {
-    let response = await StripeTerminal.connectReader(serial);
-    this._lastConnectedReader = serial;
-    this.readerConnected = response;
-    if (response === true) {
-      this._discoverReadersCB = null;
+    try {
+        let response = await StripeTerminal.connectReader(serial);
+        this._lastConnectedReader = serial;
+        this.readerConnected = response;
+        if (response) {
+          this._discoverReadersCB = null;
+        }
+        return response;
+    } catch (error) {
+      console.log('StripeTerminal.connectReader Error: ', error);
+      return error;
     }
-    return response;
   },
 
 
