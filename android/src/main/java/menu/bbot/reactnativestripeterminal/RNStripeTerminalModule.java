@@ -509,15 +509,12 @@ public class RNStripeTerminalModule
 
     @ReactMethod
     public void checkForUpdate(Promise promise){
-        RNStripeTerminalModule manager = this;
-
         if(Terminal.isInitialized()){
 
             ReaderSoftwareUpdateCallback callback = new ReaderSoftwareUpdateCallback() {
                 @Override
                 public void onSuccess(ReaderSoftwareUpdate update) {
-                    // todo implement
-                    manager.availableUpdate = update;
+                    availableUpdate = update;
                     promise.resolve(true);
                 }
 
@@ -536,9 +533,8 @@ public class RNStripeTerminalModule
 
     @ReactMethod
     public void installUpdate(Promise promise){
-        RNStripeTerminalModule manager = this;
 
-        if(manager.availableUpdate == null) {
+        if(availableUpdate == null) {
             promise.reject("UpdateError", "An internal error occurred. Please contact support");
         }
 
@@ -552,7 +548,7 @@ public class RNStripeTerminalModule
         Callback callback = new Callback() {
             @Override
             public void onSuccess() {
-                manager.availableUpdate = null;
+                availableUpdate = null;
                 promise.resolve(true);
             }
 
@@ -562,7 +558,7 @@ public class RNStripeTerminalModule
             }
         };
 
-        cancelableInstall = Terminal.getInstance().installUpdate(manager.availableUpdate, listener, callback);
+        cancelableInstall = Terminal.getInstance().installUpdate(availableUpdate, listener, callback);
 
     }
 
