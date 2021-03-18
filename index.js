@@ -148,19 +148,19 @@ export default {
     DeviceEventEmitter.removeAllListeners();
   },
 
+  /**
+   * Throws error if unsuccessful, be sure to call within try/catch block
+   * @param serial
+   * @returns {Promise<*>}
+   */
   async connectReader(serial) {
-    try {
-        let response = await StripeTerminal.connectReader(serial);
-        this._lastConnectedReader = serial;
-        this.readerConnected = response;
-        if (response) {
-          this._discoverReadersCB = null;
-        }
-        return response;
-    } catch (error) {
-      console.log('StripeTerminal.connectReader Error: ', error);
-      return error;
-    }
+      let response = await StripeTerminal.connectReader(serial);
+      this._lastConnectedReader = serial;
+      this.readerConnected = response;
+      if (response) {
+        this._discoverReadersCB = null;
+      }
+      return response;
   },
 
 
