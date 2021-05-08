@@ -515,7 +515,7 @@ public class RNStripeTerminalModule
                 @Override
                 public void onSuccess(ReaderSoftwareUpdate update) {
                     availableUpdate = update;
-                    promise.resolve(true);
+                    promise.resolve(update != null);
                 }
 
                 @Override
@@ -536,6 +536,7 @@ public class RNStripeTerminalModule
 
         if(availableUpdate == null) {
             promise.reject("UpdateError", "An internal error occurred. Please contact support");
+            return;
         }
 
         ReaderSoftwareUpdateListener listener = new ReaderSoftwareUpdateListener() {

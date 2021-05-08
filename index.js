@@ -1,4 +1,4 @@
-import {NativeModules, DeviceEventEmitter} from 'react-native';
+import {NativeModules, DeviceEventEmitter, PermissionsAndroid} from 'react-native';
 import _ from "lodash";
 
 // Todo: Handle discoverReader timeout
@@ -36,16 +36,31 @@ export default {
   async init(settings) {
     this.settings = settings;
 
+    let allowed = await PermissionsAndroid.check(PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION);
+    if(!allowed){
+      let result = await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION);
+      if(result === PermissionsAndroid.RESULTS.GRANTED){
+        allowed = true;
+      }
+    }
+
+    if(!allowed) {
+      throw new Error("Location permission required");
+    }
+
     let isInitialized = await StripeTerminal.init(settings);
 
     if (isInitialized) {
       this.configureListeners();
 
-      /*if(settings.defaultReader){
-        console.log('attempting to connect to default reader');
+      if(settings.defaultReader){
         this._lastConnectedReader = settings.defaultReader;
-        this.discoverReaders(this.settings, this.autoReconnectReader)
-      }*/
+        this.on('updateDiscoveredReaders', this.autoReconnectReader.bind(this));
+        this.discoverReaders({simulated: this.settings.simulated}).then(() => {
+
+          this.trigger('discoverFinished', this.readerConnected);
+        });
+      }
     }
 
     return isInitialized;
@@ -56,8 +71,7 @@ export default {
     _configured = true;
 
     DeviceEventEmitter.addListener("StripeTerminalEvent", data => {
-
-      // not sure if we need any of this...
+      // UnexpectedDisconnect doesn't get called it appears
       switch (data.event) {
         case 'updateDiscoveredReaders':
           if (this._discoverReadersCB) this._discoverReadersCB(data.data);
@@ -81,7 +95,7 @@ export default {
           break;
         case 'UnexpectedDisconnect':
           if (this.settings.autoReconnect && this._lastConnectedReader){
-            this.discoverReaders(this.settings, this.autoReconnectReader)
+            this.discoverReaders(this.settings);
           }
           break;
       }
@@ -90,12 +104,11 @@ export default {
     });
   },
 
-  autoReconnectReader(readers){
-
+  async autoReconnectReader(readers){
     if(readers.length > 0){
       let reader = readers.find(r => r.serial === this._lastConnectedReader);
       if(reader){
-        this.connectReader(reader.serial);
+        await this.connectReader(reader.serial);
       }
     }
   },
@@ -116,31 +129,22 @@ export default {
    */
   async discoverReaders(options, callbackFn = ()=>{}) {
     let defaultOptions = {
-        timeout: 120,
-        simulated: false
+        timeout: this.settings.scanTimeout,
+        simulated: this.settings.simulated
     }
     if(typeof options !== 'object'){
       options = {
         timeout: options // backwards compatibility
       }
     }
-    Object.assign(defaultOptions, options);
-
-    if(options.readerSerial){
-      this._lastConnectedReader = options.readerSerial;
-    }
-
-    let callback = options.readerSerial ? (readers) => {
-      this.autoReconnectReader(readers);
-      callbackFn();
-    } : callbackFn;
-
-    this._discoverReadersCB = callback;
+    options = Object.assign(defaultOptions, options);
+    this._discoverReadersCB = callbackFn;
+    this._isDiscovering = true;
     return await StripeTerminal.discoverReaders(options);
-
   },
 
   async cancelDiscovery() {
+    this._isDiscovering = false;
     return await StripeTerminal.cancelDiscovery();
   },
 
@@ -154,18 +158,19 @@ export default {
    * @returns {Promise<*>}
    */
   async connectReader(serial) {
-      let response = await StripeTerminal.connectReader(serial);
-      this._lastConnectedReader = serial;
-      this.readerConnected = response;
-      if (response) {
-        this._discoverReadersCB = null;
-      }
-      return response;
+    this._isDiscovering = false;
+    let response = await StripeTerminal.connectReader(serial);
+    this._lastConnectedReader = serial;
+    this.readerConnected = response;
+    if (response) {
+      this._discoverReadersCB = null;
+    }
+    return response;
   },
 
 
   async disconnectReader() {
-    return  await StripeTerminal.disconnectReader();
+    return await StripeTerminal.disconnectReader();
   },
 
   async createPaymentIntent(amount, currency, statementDescriptor) {
