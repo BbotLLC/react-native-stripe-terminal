@@ -37,13 +37,6 @@ export default {
     this.settings = settings;
 
     let allowed = await PermissionsAndroid.check(PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION);
-    if(!allowed){
-      let result = await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION);
-      if(result === PermissionsAndroid.RESULTS.GRANTED){
-        allowed = true;
-      }
-    }
-
     if(!allowed) {
       throw new Error("Location permission required");
     }
