@@ -70,6 +70,7 @@ public class RNStripeTerminalModule
     private Cancelable cancelableCollect;
     private Cancelable cancelableUpdate;
     private Cancelable cancelableInstall;
+    private Promise connectionPromise;
 
     private Boolean isDiscovering;
 
@@ -212,6 +213,7 @@ public class RNStripeTerminalModule
     public void connectReader(String readerId, Promise promise) {
 
         Reader reader = findReaderBySerial(readerId);
+        connectionPromise = promise;
 
         if (reader != null) {
             try {
@@ -425,9 +427,8 @@ public class RNStripeTerminalModule
      * Notify the `Activity` that a [Reader] has been connected to
      */
     public void onConnectReader(Reader reader, Promise promise) {
-        if(promise != null)
-            promise.resolve(readerToMap(reader));
-
+        promise.resolve(readerToMap(reader));
+        connectionPromise = null;
         emit("ConnectionStatusChange", "CONNECTED");
     }
 
@@ -501,6 +502,18 @@ public class RNStripeTerminalModule
         WritableNativeMap returnObj = Arguments.makeNativeMap(m);
 
         Log.i("emit", returnObj.toString());
+
+        // For some reason, onConnectReader sometimes doesn't get called on successful connection
+        // This lets us manually resolve the promise
+        if(event.equals("ConnectionStatusChange") && data.equals("CONNECTED") && connectionPromise != null) {
+            Reader reader = Terminal.getInstance().getConnectedReader();
+            if (reader != null) {
+                WritableMap readerMap = readerToMap(reader);
+                connectionPromise.resolve(readerMap);
+            } else {
+                connectionPromise.reject("TerminalException", "Stripe says reader connected but no reader found");
+            }
+        }
 
         getReactApplicationContext()
             .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)

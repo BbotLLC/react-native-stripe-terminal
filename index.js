@@ -158,6 +158,7 @@ export default {
     if (response) {
       this._discoverReadersCB = null;
     }
+
     return response;
   },
 
