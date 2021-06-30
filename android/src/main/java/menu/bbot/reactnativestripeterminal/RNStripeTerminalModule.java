@@ -50,6 +50,7 @@ import org.jetbrains.annotations.NotNull;
 
 import menu.bbot.reactnativestripeterminal.callbacks.CollectPaymentMethodCallback;
 import menu.bbot.reactnativestripeterminal.callbacks.CollectPaymentMethodCancellationCallback;
+import menu.bbot.reactnativestripeterminal.callbacks.ReadReusableCardCancellationCallback;
 import menu.bbot.reactnativestripeterminal.callbacks.ConfirmPaymentIntentCallback;
 import menu.bbot.reactnativestripeterminal.callbacks.ConnectionCallback;
 import menu.bbot.reactnativestripeterminal.callbacks.CreatePaymentIntentCallback;
@@ -70,6 +71,7 @@ public class RNStripeTerminalModule
     private Cancelable cancelableCollect;
     private Cancelable cancelableUpdate;
     private Cancelable cancelableInstall;
+    private Cancelable cancelableReusable;
     private Promise connectionPromise;
 
     private Boolean isDiscovering;
@@ -283,10 +285,11 @@ public class RNStripeTerminalModule
             ReadReusableCardParameters params = new ReadReusableCardParameters.Builder()
                     .build();
 
-            Terminal.getInstance().readReusableCard(params, this, new PaymentMethodCallback() {
+            cancelableReusable = Terminal.getInstance().readReusableCard(params, this, new PaymentMethodCallback() {
                 @Override
                 public void onSuccess(PaymentMethod paymentMethod) {
                     promise.resolve(paymentMethodToMap(paymentMethod));
+                    cancelableReusable = null;
                 }
 
                 @Override
@@ -299,6 +302,21 @@ public class RNStripeTerminalModule
             promise.reject("Error",error.getMessage());
         }
     }
+
+    @ReactMethod
+    public void cancelReadReusableCard(Promise promise){
+        if(cancelableReusable == null){
+            promise.reject("Error", "Nothing to cancel");
+        } else {
+            if (!cancelableReusable.isCompleted()) {
+                cancelableReusable.cancel(new ReadReusableCardCancellationCallback(this, promise));
+            } else {
+                promise.resolve(true);
+                cancelableReusable = null;
+            }
+        }
+    }
+
 
     @ReactMethod
     public void createPaymentIntent(int amount, String currency, String statementDescriptor, Promise promise) {
@@ -356,6 +374,8 @@ public class RNStripeTerminalModule
         }
     }
 
+
+
     /**
      * Notify the `Activity` that a payment method has been collected
      */
@@ -412,6 +432,13 @@ public class RNStripeTerminalModule
      * Notify the `Activity` that collecting payment method has been canceled
      */
     public void onCancelCollectPaymentMethod(Promise promise) {
+        promise.resolve(true);
+    }
+
+    /**
+     * Notify the `Activity` that reading the reusable card has been canceled
+     */
+    public void onCancelReadReusableCard(Promise promise) {
         promise.resolve(true);
     }
 

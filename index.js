@@ -189,6 +189,10 @@ export default {
     return await StripeTerminal.readReusableCard();
   },
 
+  async cancelReadReusableCard(){
+    return await StripeTerminal.cancelReadReusableCard();
+  },
+
   async checkForUpdate(){
     this._progressCallback = null;
     return await StripeTerminal.checkForUpdate();
