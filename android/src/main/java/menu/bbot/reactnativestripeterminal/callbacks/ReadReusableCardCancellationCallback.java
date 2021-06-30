@@ -26,7 +26,7 @@ public final class ReadReusableCardCancellationCallback implements Callback {
     }
 
     public void onFailure(TerminalException e) {
-        promise.reject("CollectPaymentMethodError", e.getErrorMessage());
+        promise.reject("ReadReusableCardError", e.getErrorMessage());
         this.manager.onFailure(e);
     }
 }
