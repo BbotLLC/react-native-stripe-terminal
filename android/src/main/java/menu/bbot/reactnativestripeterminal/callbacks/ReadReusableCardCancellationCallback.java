@@ -6,7 +6,6 @@ import com.stripe.stripeterminal.model.external.TerminalException;
 
 import menu.bbot.reactnativestripeterminal.TerminalStateManager;
 
-
 /**
  * A [Callback] that notifies the [TerminalStateManager] that [Terminal.collectPaymentMethod] has
  * been canceled
