@@ -2,8 +2,8 @@ package menu.bbot.reactnativestripeterminal.callbacks;
 
 import menu.bbot.reactnativestripeterminal.TerminalStateManager;
 import com.facebook.react.bridge.Promise;
-import com.stripe.stripeterminal.callable.Callback;
-import com.stripe.stripeterminal.model.external.TerminalException;
+import com.stripe.stripeterminal.external.callable.Callback;
+import com.stripe.stripeterminal.external.models.TerminalException;
 
 /**
  * A [Callback] that notifes the [TerminalStateManager] when discovery has completed

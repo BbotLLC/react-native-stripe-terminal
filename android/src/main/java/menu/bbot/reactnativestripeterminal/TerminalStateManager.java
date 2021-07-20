@@ -1,9 +1,9 @@
 package menu.bbot.reactnativestripeterminal;
 
 import com.facebook.react.bridge.Promise;
-import com.stripe.stripeterminal.model.external.PaymentIntent;
-import com.stripe.stripeterminal.model.external.Reader;
-import com.stripe.stripeterminal.model.external.TerminalException;
+import com.stripe.stripeterminal.external.models.PaymentIntent;
+import com.stripe.stripeterminal.external.models.Reader;
+import com.stripe.stripeterminal.external.models.TerminalException;
 
 /**
  * An `Activity` that should be notified when various [Terminal] actions have completed

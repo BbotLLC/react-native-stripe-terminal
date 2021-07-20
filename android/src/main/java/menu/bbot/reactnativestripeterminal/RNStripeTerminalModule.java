@@ -15,26 +15,31 @@ import com.facebook.react.bridge.WritableNativeMap;
 import com.facebook.react.modules.core.DeviceEventManagerModule;
 
 import com.stripe.stripeterminal.Terminal;
-import com.stripe.stripeterminal.callable.Callback;
-import com.stripe.stripeterminal.callable.Cancelable;
-import com.stripe.stripeterminal.callable.PaymentMethodCallback;
-import com.stripe.stripeterminal.callable.ReaderDisplayListener;
-import com.stripe.stripeterminal.callable.ReaderSoftwareUpdateCallback;
-import com.stripe.stripeterminal.callable.ReaderSoftwareUpdateListener;
-import com.stripe.stripeterminal.callable.TerminalListener;
+import com.stripe.stripeterminal.external.callable.Callback;
+import com.stripe.stripeterminal.external.callable.Cancelable;
+import com.stripe.stripeterminal.external.callable.PaymentMethodCallback;
+import com.stripe.stripeterminal.external.callable.ReaderDisplayListener;
+import com.stripe.stripeterminal.external.callable.ReaderSoftwareUpdateCallback;
+import com.stripe.stripeterminal.external.callable.ReaderSoftwareUpdateListener;
+import com.stripe.stripeterminal.external.callable.TerminalListener;
 import com.stripe.stripeterminal.log.LogLevel;
-import com.stripe.stripeterminal.model.external.CardDetails;
-import com.stripe.stripeterminal.model.external.DeviceType;
-import com.stripe.stripeterminal.model.external.DiscoveryConfiguration;
-import com.stripe.stripeterminal.model.external.PaymentIntent;
-import com.stripe.stripeterminal.model.external.PaymentIntentParameters;
-import com.stripe.stripeterminal.model.external.PaymentMethod;
-import com.stripe.stripeterminal.model.external.ReadReusableCardParameters;
-import com.stripe.stripeterminal.model.external.Reader;
-import com.stripe.stripeterminal.model.external.ReaderDisplayMessage;
-import com.stripe.stripeterminal.model.external.ReaderInputOptions;
-import com.stripe.stripeterminal.model.external.ReaderSoftwareUpdate;
-import com.stripe.stripeterminal.model.external.TerminalException;
+import com.stripe.stripeterminal.external.models.CardDetails;
+import com.stripe.stripeterminal.external.models.DeviceType;
+import com.stripe.stripeterminal.external.models.DiscoveryConfiguration;
+import com.stripe.stripeterminal.external.models.DiscoveryMethod;
+import com.stripe.stripeterminal.external.models.Location;
+import com.stripe.stripeterminal.external.models.PaymentIntent;
+import com.stripe.stripeterminal.external.models.PaymentIntentParameters;
+import com.stripe.stripeterminal.external.models.PaymentMethod;
+import com.stripe.stripeterminal.external.models.ReadReusableCardParameters;
+import com.stripe.stripeterminal.external.models.Reader;
+import com.stripe.stripeterminal.external.models.ReaderDisplayMessage;
+import com.stripe.stripeterminal.external.models.ReaderInputOptions;
+import com.stripe.stripeterminal.external.models.ReaderSoftwareUpdate;
+import com.stripe.stripeterminal.external.models.TerminalException;
+
+import com.stripe.stripeterminal.external.models.ConnectionConfiguration.BluetoothConnectionConfiguration;
+import com.stripe.stripeterminal.external.models.ConnectionConfiguration.InternetConnectionConfiguration;
 
 
 import java.util.ArrayList;
@@ -88,17 +93,24 @@ public class RNStripeTerminalModule
        //reactContext.addLifecycleEventListener(observer);
     }
 
+    @Override
+    public Map<String, Object> getConstants() {
+       final Map<String, Object> constants = new HashMap<>();
+
+       final Map<String, Object> discoveryMethods = new HashMap<String, Object>();
+       discoveryMethods.put("BLUETOOTH_SCAN", DiscoveryMethod.BLUETOOTH_SCAN);
+       discoveryMethods.put("INTERNET", DiscoveryMethod.INTERNET);
+       discoveryMethods.put("COTS", DiscoveryMethod.COTS);
+       discoveryMethods.put("HANDOFF", DiscoveryMethod.HANDOFF);
+
+       constants.put("DiscoveryMethods", discoveryMethods);
+       return constants;
+    }
+
 
     @Override
     public String getName() {
         return "StripeTerminal";
-    }
-
-    // Optional method to return constant values
-    @Override
-    public Map<String, Object> getConstants() {
-        final Map<String, Object> constants = new HashMap<>();
-        return constants;
     }
 
     @ReactMethod
@@ -212,10 +224,12 @@ public class RNStripeTerminalModule
 
 
     @ReactMethod
-    public void connectReader(String readerId, Promise promise) {
+    public void connectBluetoothReader(String readerId, Promise promise) {
 
         Reader reader = findReaderBySerial(readerId);
         connectionPromise = promise;
+
+        String locationId = "";
 
         if (reader != null) {
             try {
@@ -224,12 +238,41 @@ public class RNStripeTerminalModule
                 if(connectedReader != null){
                     terminal.disconnectReader(new DisconnectCallback(this, null));
                 }
-                terminal.connectReader(reader, new ConnectionCallback(this, promise));
+                terminal.connectBluetoothReader(
+                    reader,
+                    new BluetoothConnectionConfiguration(locationId),
+                    new BluetoothReaderEventListener(this),
+                    new ConnectionCallback(this, promise)
+                );
             } catch(Exception exception){
                 promise.reject("Error",exception.getMessage());
             }
         } else {
             promise.reject("Error","Could not connect to reader");
+        }
+    }
+
+    @ReactMethod
+    public void connectInternetReader(String readerId, Promise promise) {
+        Reader reader = findReaderBySerial(readerId);
+        connectionPromise = promise;
+
+        if(!reader){
+            promise.reject("Error", "Error connecting to reader. Please try again");
+        } else {
+            try {
+                Terminal.getInstance().getConnectedReader();
+                if(connectedReader){
+                    Terminal.getInstance().disconnectReader(new DisconnectCallback(this, null));
+                }
+                Terminal.getInstance().connectInternetReader(
+                    reader,
+                    new InternetConnectionConfiguration(),
+                    new ConnectionCallback(this, promise)
+                )
+            } catch(Exception exp){
+
+            }
         }
     }
 

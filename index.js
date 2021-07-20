@@ -150,7 +150,24 @@ export default {
    * @param serial
    * @returns {Promise<*>}
    */
-  async connectReader(serial) {
+  async connectInternetReader(serial) {
+    this._isDiscovering = false;
+    let response = await StripeTerminal.connectReader(serial);
+    this._lastConnectedReader = serial;
+    this.readerConnected = response;
+    if (response) {
+      this._discoverReadersCB = null;
+    }
+
+    return response;
+  },
+
+  /**
+   * Throws error if unsuccessful, be sure to call within try/catch block
+   * @param serial
+   * @returns {Promise<*>}
+   */
+  async connectBluetoothReader(serial) {
     this._isDiscovering = false;
     let response = await StripeTerminal.connectReader(serial);
     this._lastConnectedReader = serial;
