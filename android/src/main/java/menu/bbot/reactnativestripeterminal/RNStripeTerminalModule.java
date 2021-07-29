@@ -4,6 +4,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import com.facebook.react.bridge.Arguments;
+import com.facebook.react.bridge.Callback; // https://reactnative.dev/docs/native-modules-android#callbacks
 import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
@@ -15,19 +16,20 @@ import com.facebook.react.bridge.WritableNativeMap;
 import com.facebook.react.modules.core.DeviceEventManagerModule;
 
 import com.stripe.stripeterminal.Terminal;
-import com.stripe.stripeterminal.external.callable.Callback;
+//import com.stripe.stripeterminal.external.callable.Callback;
 import com.stripe.stripeterminal.external.callable.Cancelable;
+import com.stripe.stripeterminal.external.callable.LocationListCallback;
 import com.stripe.stripeterminal.external.callable.PaymentMethodCallback;
-import com.stripe.stripeterminal.external.callable.ReaderDisplayListener;
 import com.stripe.stripeterminal.external.callable.ReaderSoftwareUpdateCallback;
-import com.stripe.stripeterminal.external.callable.ReaderSoftwareUpdateListener;
 import com.stripe.stripeterminal.external.callable.TerminalListener;
 import com.stripe.stripeterminal.log.LogLevel;
+import com.stripe.stripeterminal.external.models.Address;
 import com.stripe.stripeterminal.external.models.CardDetails;
 import com.stripe.stripeterminal.external.models.DeviceType;
 import com.stripe.stripeterminal.external.models.DiscoveryConfiguration;
 import com.stripe.stripeterminal.external.models.DiscoveryMethod;
 import com.stripe.stripeterminal.external.models.Location;
+import com.stripe.stripeterminal.external.models.ListLocationsParameters;
 import com.stripe.stripeterminal.external.models.PaymentIntent;
 import com.stripe.stripeterminal.external.models.PaymentIntentParameters;
 import com.stripe.stripeterminal.external.models.PaymentMethod;
@@ -40,12 +42,17 @@ import com.stripe.stripeterminal.external.models.TerminalException;
 
 import com.stripe.stripeterminal.external.models.ConnectionConfiguration.BluetoothConnectionConfiguration;
 import com.stripe.stripeterminal.external.models.ConnectionConfiguration.InternetConnectionConfiguration;
+import com.stripe.stripeterminal.external.models.ConnectionConfiguration.EmbeddedConnectionConfiguration;
 
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
+
+import java.lang.Enum;
 
 import android.app.Activity;
 import android.os.Build;
@@ -65,24 +72,21 @@ import menu.bbot.reactnativestripeterminal.callbacks.DiscoveryCancellationCallba
 
 public class RNStripeTerminalModule
         extends ReactContextBaseJavaModule
-        implements TerminalStateManager, ReaderDisplayListener {
+        implements TerminalStateManager {
 
     private ReactApplicationContext reactContext;
-  //  private final TerminalLifecycleObserver observer = TerminalLifecycleObserver.Companion.getInstance();
+    private static final String TAG = "RNStripeTerminal";
 
     private List<? extends Reader> availableReaders;
 
+    private Boolean discoveryInProgress;
     private Cancelable cancelableDiscovery;
     private Cancelable cancelableCollect;
     private Cancelable cancelableUpdate;
     private Cancelable cancelableInstall;
     private Cancelable cancelableReusable;
+
     private Promise connectionPromise;
-
-    private Boolean isDiscovering;
-
-    public ReaderSoftwareUpdate availableUpdate;
-
     private PaymentIntent currentPaymentIntent;
 
     public RNStripeTerminalModule(ReactApplicationContext reactContext) {
@@ -90,20 +94,23 @@ public class RNStripeTerminalModule
 
         this.reactContext = reactContext;
         availableReaders = new ArrayList<Reader>();
-       //reactContext.addLifecycleEventListener(observer);
     }
 
     @Override
     public Map<String, Object> getConstants() {
        final Map<String, Object> constants = new HashMap<>();
 
-       final Map<String, Object> discoveryMethods = new HashMap<String, Object>();
-       discoveryMethods.put("BLUETOOTH_SCAN", DiscoveryMethod.BLUETOOTH_SCAN);
-       discoveryMethods.put("INTERNET", DiscoveryMethod.INTERNET);
-       discoveryMethods.put("COTS", DiscoveryMethod.COTS);
-       discoveryMethods.put("HANDOFF", DiscoveryMethod.HANDOFF);
+       // Output Enum to Array of String:
+        List<String> discoveryMethodNames = Arrays.stream(DiscoveryMethod.values())
+                .map(e -> e.name())
+                .collect(Collectors.toList());
 
-       constants.put("DiscoveryMethods", discoveryMethods);
+        constants.put("DiscoveryMethods", discoveryMethodNames);
+
+        /** To fetch:
+         * DiscoveryMethod.values()[ordinal]
+         */
+
        return constants;
     }
 
@@ -180,28 +187,41 @@ public class RNStripeTerminalModule
         }
         Terminal terminal = Terminal.getInstance();
         Reader connectedReader = terminal.getConnectedReader();
+
         if(connectedReader != null){
             terminal.disconnectReader(new DisconnectCallback(this, null));
         }
 
         int timeout = options.hasKey("timeout") ? options.getInt("timeout") : 0;
         boolean simulated = options.hasKey("simulated") && options.getBoolean("simulated");
+        String locationId = options.getString("locationId");
 
-        this.isDiscovering = true;
+        DiscoveryMethod method = options.hasKey("discoveryMethod") ? DiscoveryMethod.values()[options.getInt("discoveryMethod")] : DiscoveryMethod.BLUETOOTH_SCAN;
+
+        DiscoveryMethod discoveryMethod = DiscoveryMethod.BLUETOOTH_SCAN;
+
+        discoveryInProgress = true;
+
+        Log.i(TAG, String.format("discovering Readers: Timeout: %d, Method: %s, Simulated: %b", timeout, discoveryMethod.toString(), simulated));
 
         try {
-            DiscoveryConfiguration config = new DiscoveryConfiguration(timeout, DeviceType.CHIPPER_2X, simulated);
+            DiscoveryConfiguration config = new DiscoveryConfiguration(
+                timeout,
+                discoveryMethod,
+                simulated
+            );
             DiscoveryEventListener discoveryEventListener = new DiscoveryEventListener(this);
 
-            cancelableDiscovery = terminal.discoverReaders(
+            cancelableDiscovery = Terminal.getInstance().discoverReaders(
                 config,
                 discoveryEventListener,
                 new DiscoveryCallback(this, promise)
             );
         } catch(Exception err){
-            this.isDiscovering = false;
+            discoveryInProgress = false;
             cancelableDiscovery = null;
-            promise.reject("Error",err.getMessage());
+            Log.i(TAG, "Caught error in discoverReaders");
+            promise.reject("Error", err.getMessage());
         }
 
         // todo - handle this promise in DiscoveryCallbacks?
@@ -209,7 +229,13 @@ public class RNStripeTerminalModule
     }
 
     @ReactMethod
+    public void isDiscovering(Promise promise){
+        promise.resolve(discoveryInProgress);
+    }
+
+    @ReactMethod
     public void cancelDiscovery(Promise promise){
+        Log.i(TAG, "Cancel Discovery");
         if(cancelableDiscovery == null){
             promise.resolve(true);
         } else {
@@ -224,12 +250,17 @@ public class RNStripeTerminalModule
 
 
     @ReactMethod
-    public void connectBluetoothReader(String readerId, Promise promise) {
+    public void connectBluetoothReader(String readerId, ReadableMap options, Promise promise) {
 
         Reader reader = findReaderBySerial(readerId);
+        Location readerLocation = reader.getLocation();
+
         connectionPromise = promise;
 
-        String locationId = "";
+        String locationId = options.getString("locationId");
+        if(locationId == null && readerLocation != null){
+            locationId = reader.getLocation().getId();
+        }
 
         if (reader != null) {
             try {
@@ -257,19 +288,43 @@ public class RNStripeTerminalModule
         Reader reader = findReaderBySerial(readerId);
         connectionPromise = promise;
 
-        if(!reader){
+        if(reader == null){
             promise.reject("Error", "Error connecting to reader. Please try again");
         } else {
             try {
-                Terminal.getInstance().getConnectedReader();
-                if(connectedReader){
+                Reader connectedReader = Terminal.getInstance().getConnectedReader();
+                if(connectedReader != null){
                     Terminal.getInstance().disconnectReader(new DisconnectCallback(this, null));
                 }
                 Terminal.getInstance().connectInternetReader(
                     reader,
                     new InternetConnectionConfiguration(),
                     new ConnectionCallback(this, promise)
-                )
+                );
+            } catch(Exception exp){
+
+            }
+        }
+    }
+
+    @ReactMethod
+    public void connectEmbeddedReader(String readerId, Promise promise) {
+        Reader reader = findReaderBySerial(readerId);
+        connectionPromise = promise;
+
+        if(reader == null){
+            promise.reject("Error", "Error connecting to reader. Please try again");
+        } else {
+            try {
+                Reader connectedReader = Terminal.getInstance().getConnectedReader();
+                if(connectedReader != null){
+                    Terminal.getInstance().disconnectReader(new DisconnectCallback(this, null));
+                }
+                Terminal.getInstance().connectEmbeddedReader(
+                    reader,
+                    new EmbeddedConnectionConfiguration(this),
+                    new ConnectionCallback(this, promise)
+                );
             } catch(Exception exp){
 
             }
@@ -297,6 +352,7 @@ public class RNStripeTerminalModule
     }
 
     public void setAvailableReaders(@NotNull List<? extends Reader> list) {
+        Log.i("got available readers","");
         availableReaders = list;
 
         WritableArray wa = Arguments.createArray();
@@ -317,18 +373,26 @@ public class RNStripeTerminalModule
             readerMap.putDouble("batteryLevel", batt.doubleValue());
         }
         readerMap.putString("deviceType", reader.getDeviceType().name());
+        readerMap.putBoolean("updateAvailable", reader.getAvailableUpdate() != null);
+        Location loc = reader.getLocation();
+        if(loc != null){
+            readerMap.putString("locationId", loc.getId());
+        }
+        readerMap.putString("label", reader.getLabel());
+        readerMap.putString("softwareVersion", reader.getSoftwareVersion());
 
         return readerMap;
     }
 
+
     @ReactMethod
     public void readReusableCard(Promise promise){
         try {
-
+            Terminal terminal = Terminal.getInstance();
             ReadReusableCardParameters params = new ReadReusableCardParameters.Builder()
                     .build();
 
-            cancelableReusable = Terminal.getInstance().readReusableCard(params, this, new PaymentMethodCallback() {
+            cancelableReusable = terminal.readReusableCard(params, new PaymentMethodCallback() {
                 @Override
                 public void onSuccess(PaymentMethod paymentMethod) {
                     promise.resolve(paymentMethodToMap(paymentMethod));
@@ -337,12 +401,13 @@ public class RNStripeTerminalModule
 
                 @Override
                 public void onFailure(@Nonnull TerminalException e) {
+                    Log.i("ReadReusableCard",  "onFailure");
                     promise.reject("Error",e.getErrorMessage());
                 }
             });
 
         } catch(Exception error){
-            promise.reject("Error",error.getMessage());
+            promise.reject("readReusableCardError",error.getMessage());
         }
     }
 
@@ -362,10 +427,10 @@ public class RNStripeTerminalModule
 
 
     @ReactMethod
-    public void createPaymentIntent(int amount, String currency, String statementDescriptor, Promise promise) {
+    public void createPaymentIntent(double amount, String currency, String statementDescriptor, Promise promise) {
 
         PaymentIntentParameters.Builder builder = new PaymentIntentParameters.Builder()
-                .setAmount(amount)
+                .setAmount(new Double(amount).longValue())
                 .setCurrency(currency);
 
         if(!statementDescriptor.isEmpty()) {
@@ -397,7 +462,6 @@ public class RNStripeTerminalModule
 
         this.cancelableCollect = Terminal.getInstance().collectPaymentMethod(
             this.currentPaymentIntent,
-            this,
             new CollectPaymentMethodCallback(this, promise)
         );
     }
@@ -452,6 +516,7 @@ public class RNStripeTerminalModule
 
     }
 
+  /* DEPRECATED IN v2
     @Override
     public void onRequestReaderInput(ReaderInputOptions options) {
         // todo trigger event in react
@@ -460,8 +525,9 @@ public class RNStripeTerminalModule
 
         emit("ReaderStatus", options.toString());
 
-    }
+    }*/
 
+    /* DEPRECATED IN V2
     @Override
     public void onRequestReaderDisplayMessage(ReaderDisplayMessage prompt) {
         // Todo trigger event in react
@@ -469,7 +535,7 @@ public class RNStripeTerminalModule
                 prompt.toString());
 
         emit("ReaderStatus", prompt.toString());
-    }
+    }*/
 
     /**
      * Notify the `Activity` that collecting payment method has been canceled
@@ -490,6 +556,7 @@ public class RNStripeTerminalModule
      */
     public void onCancelDiscovery(Promise promise) {
         promise.resolve(true);
+        discoveryInProgress = false;
         cancelableDiscovery = null;
     }
 
@@ -499,6 +566,9 @@ public class RNStripeTerminalModule
     public void onConnectReader(Reader reader, Promise promise) {
         promise.resolve(readerToMap(reader));
         connectionPromise = null;
+        discoveryInProgress = false;
+
+        Log.i(TAG, "onConnectReader called");
         emit("ConnectionStatusChange", "CONNECTED");
     }
 
@@ -508,6 +578,8 @@ public class RNStripeTerminalModule
     public void onDisconnectReader(Promise promise) {
         if(promise != null)
             promise.resolve(true);
+
+        Log.i(TAG, "onDisconnectReader called");
         emit("ConnectionStatusChange", "NOT_CONNECTED");
     }
 
@@ -516,17 +588,52 @@ public class RNStripeTerminalModule
      */
     public void onDiscoverReaders(Promise promise) {
         promise.resolve(true);
-        this.isDiscovering = false;
+        discoveryInProgress = false;
         cancelableDiscovery = null;
     }
 
 
+    @ReactMethod
+    public void installAvailableUpdate(Promise promise) {
+        Terminal.getInstance().installAvailableUpdate();
+    }
 
+    @ReactMethod
+    public void listLocations(ReadableMap options, Promise promise) {
+        ListLocationsParameters.Builder builder = new ListLocationsParameters.Builder();
+        builder.setLimit(100);
+
+        // params.setEndingBefore()
+        // params.setStartingAfter()
+
+        Terminal.getInstance().listLocations(
+            builder.build(),
+            new LocationListCallback() {
+                @Override
+                public void onSuccess(@NotNull List<Location> locations, boolean hasMore) {
+                    Log.i("Found Locations", "");
+                    WritableArray wa = Arguments.createArray();
+                    for (Location location : locations) {
+                        WritableMap lm = locationToMap(location);
+                        wa.pushMap(lm);
+                    }
+
+                    promise.resolve(wa);
+                }
+
+                @Override
+                public void onFailure(@NotNull TerminalException e) {
+                    Log.i("Error fetching locations: ", e.getErrorMessage());
+                    promise.resolve(false);
+                }
+            }
+        );
+    }
 
     /**
      * Notify the `Activity` that a [TerminalException] has been thrown
      */
-    public void onFailure(TerminalException e) {
+    public void onFailure(@NotNull TerminalException e) {
         emit("ReaderError",  e.getErrorCode().toString() +": "+e.getErrorMessage());
     }
 
@@ -535,7 +642,7 @@ public class RNStripeTerminalModule
 
         pi.putString("id", paymentIntent.getId());
         pi.putDouble("created", paymentIntent.getCreated());
-        pi.putInt("amount", paymentIntent.getAmount());
+        pi.putDouble("amount", Double.longBitsToDouble(paymentIntent.getAmount()));
         pi.putString("clientSecret", paymentIntent.getClientSecret());
         pi.putString("status", paymentIntent.getStatus().toString());
 
@@ -561,6 +668,17 @@ public class RNStripeTerminalModule
 
         return pm;
 
+    }
+
+    public WritableMap locationToMap(Location location) {
+        WritableMap locationMap = Arguments.createMap();
+        locationMap.putString("id", location.getId());
+        locationMap.putString("displayName", location.getDisplayName());
+        locationMap.putBoolean("livemode", location.getLivemode());
+
+        Address address = location.getAddress(); // city, country, line1, line2, postalCode, state
+
+        return locationMap;
     }
 
     public void emit(String event, @Nullable Object data){
@@ -590,6 +708,7 @@ public class RNStripeTerminalModule
             .emit("StripeTerminalEvent", returnObj);
     }
 
+    /* DEPRECATED
     @ReactMethod
     public void checkForUpdate(Promise promise){
         if(Terminal.isInitialized()){
@@ -612,9 +731,10 @@ public class RNStripeTerminalModule
         } else {
             promise.reject("TerminalException", "Terminal Instance not Initialized");
         }
-    }
+    }*/
 
-    @ReactMethod
+   /* DEPRECATED
+   @ReactMethod
     public void installUpdate(Promise promise){
 
         if(availableUpdate == null) {
@@ -644,6 +764,6 @@ public class RNStripeTerminalModule
 
         cancelableInstall = Terminal.getInstance().installUpdate(availableUpdate, listener, callback);
 
-    }
+    }*/
 
 }

@@ -9,6 +9,7 @@ import okhttp3.Request;
 import okhttp3.Response;
 
 import org.json.JSONObject;
+import android.util.Log;
 
 public class TokenProvider implements ConnectionTokenProvider {
 
@@ -38,7 +39,7 @@ public class TokenProvider implements ConnectionTokenProvider {
 
             String jsonResponse = response.body().string();
             JSONObject obj = new JSONObject(jsonResponse);
-
+            Log.i("RNStripeTerminal", "Got Stripe Connection Token: " + obj.getString("secret"));
             callback.onSuccess(obj.getString("secret"));
         } catch (Exception e) {
             callback.onFailure(

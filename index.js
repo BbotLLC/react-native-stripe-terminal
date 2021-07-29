@@ -6,113 +6,135 @@ import _ from "lodash";
 const {StripeTerminal} = NativeModules;
 
 const events = {};
+const constants = StripeTerminal?.getConstants();
 
 let _configured = false;
 
-export default {
+export default class RNSTripeTerminal {
 
-  settings: {
+  static settings = {
     url: '',
     authToken: '',
     scanTimeout: 120,
     simulated: false,
     autoReconnect: true,
     defaultReader: null
-  },
+  };
 
-  _lastConnectedReader: null,
+  static _lastConnectedReader = null;
 
-  readerConnected: false,
-  readerStatus: null,
+  static readerConnected = false;
+  static readerStatus = null;
 
   // test to see if Terminal instance is already initialized
-  async isInitialized() {
+  static async isInitialized() {
     let res = await StripeTerminal.isInitialized();
-    if(res && !_configured) this.configureListeners();
+    if (res && !_configured) RNSTripeTerminal.configureListener();
 
     return res === true;
-  },
+  };
 
-  async init(settings) {
-    this.settings = settings;
+  static async init(settings) {
+    RNSTripeTerminal.settings = settings;
 
     let allowed = await PermissionsAndroid.check(PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION);
-    if(!allowed) {
+    if (!allowed) {
       throw new Error("Location permission required");
     }
 
     let isInitialized = await StripeTerminal.init(settings);
 
     if (isInitialized) {
-      this.configureListeners();
+      await RNSTripeTerminal.configureListener();
 
-      if(settings.defaultReader){
-        this._lastConnectedReader = settings.defaultReader;
-        this.on('updateDiscoveredReaders', this.autoReconnectReader.bind(this));
-        this.discoverReaders({simulated: this.settings.simulated}).then(() => {
+      if (settings.defaultReader) {
+        RNSTripeTerminal._lastConnectedReader = settings.defaultReader;
+        RNSTripeTerminal.on('updateDiscoveredReaders', RNSTripeTerminal.autoReconnectReader.bind(this));
 
-          this.trigger('discoverFinished', this.readerConnected);
+        RNSTripeTerminal.discoverReaders({simulated: RNSTripeTerminal.settings.simulated}, () => {
+          console.log('auto discover, looking for ', settings.defaultReader);
+        }).then(() => {
+          RNSTripeTerminal.trigger('discoverFinished', RNSTripeTerminal.readerConnected);
         });
       }
+
     }
 
     return isInitialized;
-  },
+  };
 
-  configureListeners() {
-    if(_configured) return;
+  static configureListener() {
+    if (_configured) return;
     _configured = true;
 
     DeviceEventEmitter.addListener("StripeTerminalEvent", data => {
+      console.log(data.event, data.data);
       // UnexpectedDisconnect doesn't get called it appears
       switch (data.event) {
         case 'updateDiscoveredReaders':
-          if (this._discoverReadersCB) this._discoverReadersCB(data.data);
+          if (RNSTripeTerminal._discoverReadersCB) RNSTripeTerminal._discoverReadersCB(data.data);
           break;
-        case 'updateProgress':
-          if(this._progressCallback) this._progressCallback(data.data);
-        break;
+        case 'StartInstallingUpdate':
+          console.log('Starting to install update');
+
+          break;
+        case 'ReaderSoftwareUpdateProgress':
+          if (RNSTripeTerminal._progressCallback) RNSTripeTerminal._progressCallback(data.data);
+          break;
+        case 'UpdateAvailable':
+          console.log("Reader Update is Available");
+          break;
+
         case 'ConnectionStatusChange':
-          this.readerStatus = data.data;
+          RNSTripeTerminal.readerStatus = data.data;
           switch (data.data) {
             case 'CONNECTING':
-              this.readerConnecting = true;
+              RNSTripeTerminal.readerConnecting = true;
               break;
             case 'CONNECTED':
-              this.readerConnected = true;
+              RNSTripeTerminal.readerConnected = true;
               break;
             case 'NOT_CONNECTED':
-              this.readerConnected = false;
+              RNSTripeTerminal.readerConnected = false;
               break;
           }
           break;
         case 'UnexpectedDisconnect':
-          if (this.settings.autoReconnect && this._lastConnectedReader){
-            this.discoverReaders(this.settings);
+          if (RNSTripeTerminal.settings.autoReconnect && RNSTripeTerminal._lastConnectedReader) {
+            RNSTripeTerminal.discoverReaders(RNSTripeTerminal.settings);
           }
           break;
       }
 
-      this.trigger(data.event, data.data);
+      RNSTripeTerminal.trigger(data.event, data.data);
     });
-  },
+  };
 
-  async autoReconnectReader(readers){
-    if(readers.length > 0){
-      let reader = readers.find(r => r.serial === this._lastConnectedReader);
-      if(reader){
-        await this.connectReader(reader.serial);
+  static async autoReconnectReader(readers) {
+    if (readers.length > 0) {
+      let reader = readers.find(r => r.serial === RNSTripeTerminal._lastConnectedReader);
+      if (reader) {
+        // TODO: use proper connection function (connectBluetooth vs connectInternet)
+        await RNSTripeTerminal.connectBluetoothReader(reader.serial);
       }
     }
-  },
+  };
 
-  async getConnectedReader() {
+  static async getConnectedReader() {
     let reader = await StripeTerminal.getConnectedReader();
-    this.readerConnected = !!reader;
-    this.readerStatus = reader ? "CONNECTED" : "NOT_CONNECTED";
-    this.trigger('ConnectionStatusChange', this.readerStatus);
+    RNSTripeTerminal.readerConnected = !!reader;
+    RNSTripeTerminal.readerStatus = reader ? "CONNECTED" : "NOT_CONNECTED";
+    //RNSTripeTerminal.trigger('ConnectionStatusChange', RNSTripeTerminal.readerStatus);
     return reader;
-  },
+  };
+
+  static async listLocations(options = {}) {
+    return await StripeTerminal.listLocations(options);
+  };
+
+  static async isDiscovering() {
+    return await StripeTerminal.isDiscovering();
+  }
 
   /**
    *
@@ -120,126 +142,127 @@ export default {
    * @param callbackFn - The callbackFn is passed the readers array everytime we poll for new readers
    * @returns {Promise<*>}
    */
-  async discoverReaders(options, callbackFn = ()=>{}) {
+  static async discoverReaders(options, callbackFn = () => {}) {
+    if(await RNSTripeTerminal.isDiscovering()) return;
+
     let defaultOptions = {
-        timeout: this.settings.scanTimeout,
-        simulated: this.settings.simulated
+      timeout: RNSTripeTerminal.settings.scanTimeout,
+      simulated: RNSTripeTerminal.settings.simulated
     }
-    if(typeof options !== 'object'){
+    if (typeof options !== 'object') {
       options = {
         timeout: options // backwards compatibility
       }
     }
     options = Object.assign(defaultOptions, options);
-    this._discoverReadersCB = callbackFn;
-    this._isDiscovering = true;
+    RNSTripeTerminal._discoverReadersCB = callbackFn;
+
     return await StripeTerminal.discoverReaders(options);
-  },
+  };
 
-  async cancelDiscovery() {
-    this._isDiscovering = false;
+
+  static async cancelDiscovery() {
     return await StripeTerminal.cancelDiscovery();
-  },
+  };
 
-  async destroyListeners() {
+  static async destroyListeners() {
     DeviceEventEmitter.removeAllListeners();
-  },
+  };
 
   /**
    * Throws error if unsuccessful, be sure to call within try/catch block
    * @param serial
    * @returns {Promise<*>}
    */
-  async connectInternetReader(serial) {
-    this._isDiscovering = false;
-    let response = await StripeTerminal.connectReader(serial);
-    this._lastConnectedReader = serial;
-    this.readerConnected = response;
+  static async connectInternetReader(serial) {
+    let response = await StripeTerminal.connectInternetReader(serial);
+    RNSTripeTerminal._lastConnectedReader = serial;
+    RNSTripeTerminal.readerConnected = response;
     if (response) {
-      this._discoverReadersCB = null;
+      RNSTripeTerminal._discoverReadersCB = null;
     }
 
     return response;
-  },
+  };
 
   /**
    * Throws error if unsuccessful, be sure to call within try/catch block
    * @param serial
+   * @param config
    * @returns {Promise<*>}
    */
-  async connectBluetoothReader(serial) {
-    this._isDiscovering = false;
-    let response = await StripeTerminal.connectReader(serial);
-    this._lastConnectedReader = serial;
-    this.readerConnected = response;
+  static async connectBluetoothReader(serial, config = {}) {
+    let response = await StripeTerminal.connectBluetoothReader(serial, config);
+    RNSTripeTerminal._lastConnectedReader = serial;
+    RNSTripeTerminal.readerConnected = response;
     if (response) {
-      this._discoverReadersCB = null;
+      RNSTripeTerminal._discoverReadersCB = null;
     }
 
     return response;
-  },
+  };
 
 
-  async disconnectReader() {
+  static async disconnectReader() {
     return await StripeTerminal.disconnectReader();
-  },
+  };
 
-  async createPaymentIntent(amount, currency, statementDescriptor) {
+  static async createPaymentIntent(amount, currency, statementDescriptor) {
     if (!currency) currency = "usd";
 
     return await StripeTerminal.createPaymentIntent(amount, currency, statementDescriptor);
-  },
+  };
 
-  async collectPaymentMethod() {
+  static async collectPaymentMethod() {
     return await StripeTerminal.collectPaymentMethod();
-  },
+  };
 
-  async cancelCollectPaymentMethod(){
+  static async cancelCollectPaymentMethod() {
     return await StripeTerminal.cancelCollectPaymentMethod();
-  },
+  };
 
-  async confirmPaymentIntent() {
+  static async confirmPaymentIntent() {
     return await StripeTerminal.confirmPaymentIntent();
-  },
+  };
 
-  async readReusableCard(){
+  static async readReusableCard() {
     return await StripeTerminal.readReusableCard();
-  },
+  };
 
-  async cancelReadReusableCard(){
+  static async cancelReadReusableCard() {
     return await StripeTerminal.cancelReadReusableCard();
-  },
+  };
 
-  async checkForUpdate(){
-    this._progressCallback = null;
+  static async checkForUpdate() {
+    RNSTripeTerminal._progressCallback = null;
     return await StripeTerminal.checkForUpdate();
-  },
+  };
 
-  async installUpdate(progressCallback){
-    this._progressCallback = progressCallback;
+  static async installAvailableUpdate(callback) {
+    RNSTripeTerminal._progressCallback = callback;
+    return await StripeTerminal.installAvailableUpdate();
+  };
 
-    return await StripeTerminal.installUpdate();
-  },
-
-  on(event, fn) {
-    let self = this;
+  static on(event, fn) {
     if (!events[event]) events[event] = [fn];
     else events[event].push(fn);
 
     return {
       event: event,
       fn: fn,
-      remove() { self.off(event, fn)}
+      remove() {
+        RNSTripeTerminal.off(event, fn)
+      }
     };
-  },
+  };
 
-  off(event, fn) {
+  static off(event, fn) {
     _.pull(events[event], fn);
-  },
+  };
 
-  trigger(event, ...args) {
-    if (this._allEventsCallback) {
-      this._allEventsCallback(event, ...args);
+  static trigger(event, ...args) {
+    if (RNSTripeTerminal._allEventsCallback) {
+      RNSTripeTerminal._allEventsCallback(event, ...args);
     }
 
     if (events[event]) {
@@ -249,15 +272,15 @@ export default {
             fn.apply(null, args);
           } catch (err) {
             console.error("Stripe Event listener failed to run. ", err);
-            this.off(event, fn);
+            RNSTripeTerminal.off(event, fn);
           }
         }
       });
     }
-  },
+  };
 
-  onEvent(callbackFn) {
-    this._allEventsCallback = callbackFn;
+  static onEvent(callbackFn) {
+    RNSTripeTerminal._allEventsCallback = callbackFn;
   }
 
 

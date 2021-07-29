@@ -11,16 +11,16 @@ import java.util.List;
 
 public class DiscoveryEventListener implements DiscoveryListener {
 
-    private final RNStripeTerminalModule module;
+    private final RNStripeTerminalModule manager;
 
     public DiscoveryEventListener(RNStripeTerminalModule module){
-        this.module = module;
+        this.manager = module;
     }
 
     @Override
     public void onUpdateDiscoveredReaders(@NotNull List<? extends Reader> readers) {
         Log.d("Available Readers: ", readers.toString());
-        module.setAvailableReaders(readers);
+        manager.setAvailableReaders(readers);
     }
 
 
