@@ -37,8 +37,8 @@ import Stripe from 'react-native-stripe-terminal';
 let isInitialized = await Stripe.isInitialized();
 if(!isInitialized){
     await Stripe.init({
-        url: // stripe_auth url,
-        authToken: //stripe public auth token
+        url: '[your_endpoint_which_returns_a_connection_token]',
+        authToken: '[optional Authorization header ie: JWT Token]'
     });
 
 
