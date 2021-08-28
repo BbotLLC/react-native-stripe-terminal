@@ -1,12 +1,1 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
-
-ext {
-    stripeTerminalVersion = '2.0.0'
-}
-
-dependencies {
-
-// Stripe Terminal library
-    implementation "com.stripe:stripeterminal:$stripeTerminalVersion"
-
-}

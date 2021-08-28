@@ -1,6 +1,7 @@
 package menu.bbot.reactnativestripeterminal.callbacks;
 
 import com.facebook.react.bridge.Promise;
+import com.stripe.stripeterminal.external.api.ApiError;
 import com.stripe.stripeterminal.external.callable.Callback;
 import com.stripe.stripeterminal.external.models.TerminalException;
 
@@ -21,10 +22,12 @@ public final class CollectPaymentMethodCancellationCallback implements Callback 
         this.promise = promise;
     }
 
+    @Override
     public void onSuccess() {
         this.manager.onCancelCollectPaymentMethod(this.promise);
     }
 
+    @Override
     public void onFailure(TerminalException e) {
         promise.reject("CollectPaymentMethodError", e.getErrorMessage());
         this.manager.onFailure(e);

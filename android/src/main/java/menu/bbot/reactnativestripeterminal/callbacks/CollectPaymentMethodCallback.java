@@ -20,10 +20,12 @@ public final class CollectPaymentMethodCallback implements PaymentIntentCallback
         this.promise = promise;
     }
 
+    @Override
     public void onSuccess(PaymentIntent paymentIntent) {
         this.manager.onCollectPaymentMethod(paymentIntent, promise);
     }
 
+    @Override
     public void onFailure(TerminalException e) {
         promise.reject("CollectPaymentMethodError", e.getErrorMessage());
         this.manager.onFailure(e);

@@ -68,7 +68,7 @@ ext {
 
     leakCanaryVersion = '2.7'
 
-    stripeTerminalVersion = '2.0.0'
+    stripeTerminalVersion = '2.2.0'
 }
 
 dependencies {
@@ -76,13 +76,13 @@ dependencies {
 
     api 'com.facebook.react:react-native:+'
 
-    api "com.google.android.material:material:$materialVersion"
+    //api "com.google.android.material:material:$materialVersion"
     implementation "androidx.legacy:legacy-support-v4:$legacysupportVersion"
     implementation "androidx.appcompat:appcompat:$appcompatVersion"
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
-    implementation "androidx.constraintlayout:constraintlayout:$constraintlayoutVersion"
-    implementation "com.facebook.stetho:stetho:$stethoVersion"
-    implementation "com.facebook.stetho:stetho-okhttp3:$stethoVersion"
+    //implementation "androidx.constraintlayout:constraintlayout:$constraintlayoutVersion"
+    //implementation "com.facebook.stetho:stetho:$stethoVersion"
+    //implementation "com.facebook.stetho:stetho-okhttp3:$stethoVersion"
 
     // ViewModel and LiveData
     implementation "androidx.lifecycle:lifecycle-livedata:$viewModelVersion"

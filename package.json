@@ -12,10 +12,16 @@
   "author": "Gilles St-Cyr",
   "license": "",
   "peerDependencies": {
-    "react-native": ">= 0.41.2"
-  },
-  "dependencies": {
+    "react-native": ">= 0.41.2",
     "@babel/runtime": "^7.4.3",
     "lodash": "^4.17.11"
-  }
+  },
+  "files": [
+    "android/",
+    "ios/",
+    "index.js",
+    "package.json",
+    "package-lock.json",
+    "README.md"
+  ]
 }

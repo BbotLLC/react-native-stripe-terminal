@@ -24,7 +24,7 @@ class TerminalEventListener implements TerminalListener {
     // Do I need to do this here and elsewhere?
     public void onConnectionStatusChange(ConnectionStatus status) {
         manager.emit("ConnectionStatusChange", status.toString());
-        Log.i("TerminalEventListener.ConnectionStatusChange", status.toString());
+        Log.i("onConnStatusChange", status.toString());
     }
 
     public void onPaymentStatusChange(PaymentStatus status) {

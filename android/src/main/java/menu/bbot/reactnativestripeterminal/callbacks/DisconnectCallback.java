@@ -18,10 +18,12 @@ public final class DisconnectCallback implements Callback {
         this.promise = promise;
     }
 
+    @Override
     public void onSuccess() {
         this.manager.onDisconnectReader(promise);
     }
 
+    @Override
     public void onFailure(TerminalException e) {
         if(promise != null)
             promise.reject("DisconnectError", e.getErrorMessage());

@@ -19,10 +19,12 @@ public final class ConfirmPaymentIntentCallback implements PaymentIntentCallback
         this.promise = promise;
     }
 
+    @Override
     public void onSuccess(PaymentIntent paymentIntent) {
         this.manager.onConfirmPaymentIntent(paymentIntent, promise);
     }
 
+    @Override
     public void onFailure(TerminalException e) {
         promise.reject("ConfirmPaymentIntentError", e.getErrorMessage());
         this.manager.onFailure(e);

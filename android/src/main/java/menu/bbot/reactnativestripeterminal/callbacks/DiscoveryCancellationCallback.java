@@ -19,10 +19,12 @@ public final class DiscoveryCancellationCallback implements Callback {
         this.promise = promise;
     }
 
+    @Override
     public void onSuccess() {
         this.manager.onCancelDiscovery(promise);
     }
 
+    @Override
     public void onFailure(TerminalException e) {
         promise.reject("DiscoveryCancellationError", e.getErrorMessage());
         this.manager.onFailure(e);

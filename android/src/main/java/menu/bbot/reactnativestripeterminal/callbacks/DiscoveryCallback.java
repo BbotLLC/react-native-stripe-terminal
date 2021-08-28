@@ -19,10 +19,12 @@ public final class DiscoveryCallback implements Callback {
         this.promise = promise;
     }
 
+    @Override
     public void onSuccess() {
         this.manager.onDiscoverReaders(promise);
     }
 
+    @Override
     public void onFailure(TerminalException e) {
         this.promise.reject("DiscoveryError", e.getErrorMessage());
     }

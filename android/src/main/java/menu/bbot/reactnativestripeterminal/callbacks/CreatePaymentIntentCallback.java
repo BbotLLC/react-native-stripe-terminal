@@ -20,10 +20,12 @@ public final class CreatePaymentIntentCallback implements PaymentIntentCallback 
         this.promise = promise;
     }
 
+    @Override
     public void onSuccess(PaymentIntent paymentIntent) {
         this.manager.onCreatePaymentIntent(paymentIntent, promise);
     }
 
+    @Override
     public void onFailure(TerminalException e) {
         this.promise.reject("CreatePaymentIntentError", e.getErrorMessage());
         this.manager.onFailure(e);
