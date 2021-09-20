@@ -73,7 +73,6 @@ ext {
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-
     api 'com.facebook.react:react-native:+'
 
     //api "com.google.android.material:material:$materialVersion"
@@ -92,25 +91,25 @@ dependencies {
 
     annotationProcessor "androidx.lifecycle:lifecycle-common-java8:$viewModelVersion"
 
-    testImplementation "androidx.arch.core:core-testing:$coreTestingVersion"
+   // testImplementation "androidx.arch.core:core-testing:$coreTestingVersion"
 
     // Databinding
     annotationProcessor "com.android.databinding:compiler:$databindingVersion"
 
     // Coroutines
-    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutineVersion"
-    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:$coroutineVersion"
+    //implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutineVersion"
+    //implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:$coroutineVersion"
 
     // OK HTTP
-    implementation "com.squareup.okhttp3:okhttp:$okhttpVersion"
+    //implementation "com.squareup.okhttp3:okhttp:$okhttpVersion"
 
     // Retrofit
-    implementation "com.squareup.retrofit2:retrofit:$retrofitVersion"
-    implementation "com.squareup.retrofit2:converter-gson:$retrofitVersion"
+   // implementation "com.squareup.retrofit2:retrofit:$retrofitVersion"
+   // implementation "com.squareup.retrofit2:converter-gson:$retrofitVersion"
 
     // Stripe Terminal library
     implementation "com.stripe:stripeterminal:$stripeTerminalVersion"
 
     // Leak canary
-    debugImplementation "com.squareup.leakcanary:leakcanary-android:$leakCanaryVersion"
+   // debugImplementation "com.squareup.leakcanary:leakcanary-android:$leakCanaryVersion"
 }

@@ -19,7 +19,8 @@ public class DiscoveryEventListener implements DiscoveryListener {
 
     @Override
     public void onUpdateDiscoveredReaders(@NotNull List<? extends Reader> readers) {
-        Log.d("Available Readers: ", readers.toString());
+        Log.i("RNStripeTerminal", "Available Readers: "+readers.toString());
+
         manager.setAvailableReaders(readers);
     }
 

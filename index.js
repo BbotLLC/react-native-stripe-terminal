@@ -6,7 +6,7 @@ import _ from "lodash";
 const {StripeTerminal} = NativeModules;
 
 const events = {};
-const constants = StripeTerminal?.getConstants();
+const constants = StripeTerminal?.getConstants() || {DiscoveryMethods: []};
 
 let _configured = false;
 
@@ -82,7 +82,7 @@ class RNStripeTerminal {
     const emitter = new NativeEventEmitter(StripeTerminal);
 
     this.listener = emitter.addListener("StripeTerminalEvent", data => {
-      console.log(data.event, data.data);
+      console.log("StripeTerminalJS got event: ", data.event, data.data);
 
       // UnexpectedDisconnect doesn't get called it appears
       switch (data.event) {

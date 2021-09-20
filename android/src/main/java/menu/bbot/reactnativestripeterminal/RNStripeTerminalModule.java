@@ -66,8 +66,6 @@ import androidx.annotation.NonNull;
 import org.jetbrains.annotations.NotNull;
 
 import menu.bbot.reactnativestripeterminal.callbacks.CollectPaymentMethodCallback;
-import menu.bbot.reactnativestripeterminal.callbacks.CollectPaymentMethodCancellationCallback;
-import menu.bbot.reactnativestripeterminal.callbacks.ReadReusableCardCancellationCallback;
 import menu.bbot.reactnativestripeterminal.callbacks.ConfirmPaymentIntentCallback;
 import menu.bbot.reactnativestripeterminal.callbacks.ConnectionCallback;
 import menu.bbot.reactnativestripeterminal.callbacks.CreatePaymentIntentCallback;
@@ -384,7 +382,7 @@ public class RNStripeTerminalModule
     }
 
     public void setAvailableReaders(@NotNull List<? extends Reader> list) {
-        Log.i("got available readers", "");
+        Log.i(TAG, "got available readers");
         availableReaders = list;
 
         WritableArray wa = getReadersArray(availableReaders);
@@ -437,7 +435,7 @@ public class RNStripeTerminalModule
 
                 @Override
                 public void onFailure(@Nonnull TerminalException e) {
-                    Log.i("ReadReusableCard", "onFailure");
+                    Log.i(TAG, "ReadReusableCard:onFailure");
                     promise.reject("Error", e.getErrorMessage());
                 }
             });
@@ -454,7 +452,16 @@ public class RNStripeTerminalModule
             promise.reject("Error", "Nothing to cancel");
         } else {
             if (!cancelableReusable.isCompleted()) {
-                cancelableReusable.cancel(new ReadReusableCardCancellationCallback(this, promise));
+                cancelableReusable.cancel(new Callback() {
+                    @Override
+                    public void onSuccess() {
+                        promise.resolve(true);
+                    }
+                    @Override
+                    public void onFailure(@Nonnull TerminalException e) {
+                        promise.reject("CancelReadReusableCardError", e.getErrorMessage());
+                    }
+                });
             } else {
                 promise.resolve(true);
                 cancelableReusable = null;
@@ -551,7 +558,7 @@ public class RNStripeTerminalModule
                     }
                     @Override
                     public void onFailure(@Nonnull TerminalException e) {
-                        promise.reject("CancelReadReusableCardError", e.getErrorMessage());
+                        promise.reject("CancelCollectPaymentMethodError", e.getErrorMessage());
                     }
                 });
             } else {
@@ -615,13 +622,6 @@ public class RNStripeTerminalModule
 
         emit("ReaderStatus", prompt.toString());
     }*/
-
-    /**
-     * Notify the `Activity` that collecting payment method has been canceled
-     */
-    public void onCancelCollectPaymentMethod(Promise promise) {
-        promise.resolve(true);
-    }
 
 
     /**
@@ -763,14 +763,14 @@ public class RNStripeTerminalModule
     }
 
     public void emit(String event, @Nullable Object data) {
-
+        Log.i(TAG, "emit: " + ( data != null ? data.toString() : ""));
         Map<String, Object> m = new HashMap<String, Object>();
         m.put("event", event);
         m.put("data", data);
-
+        
         WritableNativeMap returnObj = Arguments.makeNativeMap(m);
 
-        Log.i("emit", returnObj.toString());
+        Log.i("emit again", returnObj.toString());
 
         // For some reason, onConnectReader sometimes doesn't get called on successful connection
         // This lets us manually resolve the promise
