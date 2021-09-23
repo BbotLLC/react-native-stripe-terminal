@@ -5,8 +5,6 @@ import android.util.Log;
 import com.stripe.stripeterminal.external.callable.DiscoveryListener;
 import com.stripe.stripeterminal.external.models.Reader;
 
-import org.jetbrains.annotations.NotNull;
-
 import java.util.List;
 
 public class DiscoveryEventListener implements DiscoveryListener {
@@ -18,7 +16,7 @@ public class DiscoveryEventListener implements DiscoveryListener {
     }
 
     @Override
-    public void onUpdateDiscoveredReaders(@NotNull List<? extends Reader> readers) {
+    public void onUpdateDiscoveredReaders(List<Reader> readers) {
         Log.i("RNStripeTerminal", "Available Readers: "+readers.toString());
 
         manager.setAvailableReaders(readers);

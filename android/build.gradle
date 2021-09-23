@@ -68,48 +68,21 @@ ext {
 
     leakCanaryVersion = '2.7'
 
-    stripeTerminalVersion = '2.2.0'
+    stripeTerminalVersion = '2.3.1'
 }
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     api 'com.facebook.react:react-native:+'
 
-    //api "com.google.android.material:material:$materialVersion"
-    implementation "androidx.legacy:legacy-support-v4:$legacysupportVersion"
-    implementation "androidx.appcompat:appcompat:$appcompatVersion"
+    //- implementation "androidx.legacy:legacy-support-v4:$legacysupportVersion"
+    //- implementation "androidx.appcompat:appcompat:$appcompatVersion"
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
-    //implementation "androidx.constraintlayout:constraintlayout:$constraintlayoutVersion"
-    //implementation "com.facebook.stetho:stetho:$stethoVersion"
-    //implementation "com.facebook.stetho:stetho-okhttp3:$stethoVersion"
-
-    // ViewModel and LiveData
-    implementation "androidx.lifecycle:lifecycle-livedata:$viewModelVersion"
-    implementation "androidx.lifecycle:lifecycle-viewmodel:$viewModelVersion"
-    implementation "androidx.lifecycle:lifecycle-process:$viewModelVersion"
-    implementation "androidx.lifecycle:lifecycle-common-java8:$viewModelVersion"
-
-    annotationProcessor "androidx.lifecycle:lifecycle-common-java8:$viewModelVersion"
-
-   // testImplementation "androidx.arch.core:core-testing:$coreTestingVersion"
-
-    // Databinding
-    annotationProcessor "com.android.databinding:compiler:$databindingVersion"
-
-    // Coroutines
-    //implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutineVersion"
-    //implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:$coroutineVersion"
 
     // OK HTTP
     //implementation "com.squareup.okhttp3:okhttp:$okhttpVersion"
 
-    // Retrofit
-   // implementation "com.squareup.retrofit2:retrofit:$retrofitVersion"
-   // implementation "com.squareup.retrofit2:converter-gson:$retrofitVersion"
-
     // Stripe Terminal library
     implementation "com.stripe:stripeterminal:$stripeTerminalVersion"
 
-    // Leak canary
-   // debugImplementation "com.squareup.leakcanary:leakcanary-android:$leakCanaryVersion"
 }
