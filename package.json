@@ -11,14 +11,19 @@
   ],
   "author": "Gilles St-Cyr",
   "license": "",
-  "peerDependencies": {
-    "react-native": ">= 0.41.2",
-    "@babel/runtime": "^7.4.3",
+  "dependencies": {
+    "@stripe/terminal-js": "^0.8.0",
     "lodash": "^4.17.21"
+  },
+  "peerDependencies": {
+    "@babel/runtime": "^7.4.3",
+    "lodash": "^4.17.21",
+    "react-native": ">= 0.41.2"
   },
   "files": [
     "android/",
     "ios/",
+    "src/",
     "index.js",
     "package.json",
     "package-lock.json",
