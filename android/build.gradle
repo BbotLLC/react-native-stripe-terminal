@@ -68,7 +68,7 @@ ext {
 
     leakCanaryVersion = '2.7'
 
-    stripeTerminalVersion = '2.3.1'
+    stripeTerminalVersion = '2.4.0'
 }
 
 dependencies {

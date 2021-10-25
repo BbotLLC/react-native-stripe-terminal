@@ -41,16 +41,14 @@ class RNStripeTerminal {
     // Override current settings with new settings:
     this.settings = Object.assign({}, this.settings, settings);
 
-    if (this.terminal) {
-      console.log("Stripe already Initialized!");
-      return;
-    }
+    if (this.terminal) return;
 
     const StripeTerminal = await loadStripeTerminal();
 
     this.terminal = StripeTerminal.create({
       onFetchConnectionToken: () => this.settings.fetchConnectionToken(),
       onUnexpectedReaderDisconnect: () => {
+        this.connectedReader = null;
         if (this.settings.autoReconnect && this._lastConnectedReader) {
           this.discoverReaders(this.settings);
         }
@@ -58,13 +56,11 @@ class RNStripeTerminal {
       // 'connecting', 'connected', or 'not_connected'
       onConnectionStatusChange: ({status}) => {
         status = status?.toUpperCase();
-        console.log('Stripe Web Connection Status Change: ', status);
+        if(status === "NOT_CONNECTED") this.connectedReader = null;
         this.readerConnected = (status === 'CONNECTED');
-
         this.trigger("ConnectionStatusChange", status);
       },
       onPaymentStatusChange: ({status}) => {
-        console.log('Stripe Web Payment Status Change: ', status);
         this.trigger("ReaderStatus", this.PaymentStatusMap[status]);
         this.trigger("PaymentStatusChange", this.PaymentStatusMap[status]);
       },
@@ -111,7 +107,6 @@ class RNStripeTerminal {
   connectReader = async (reader) => {
     try {
       let response = await this.terminal.connectReader(reader);
-      console.log('connectReader Response: ', response);
       if (response.error) {
         return response;
       }
@@ -133,10 +128,11 @@ class RNStripeTerminal {
   }
 
   connectBluetoothReader = async (serial) => {
-    throw "Error: Bluetooth not supported on Web"
+    throw new Error("Bluetooth not supported on Web");
   }
 
   disconnectReader = () => {
+    this.connectedReader = null;
     return this.terminal.disconnectReader();
   }
 
