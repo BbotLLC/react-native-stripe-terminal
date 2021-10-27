@@ -91,6 +91,7 @@ public class RNStripeTerminalModule
     private Cancelable cancelableReusable;
 
     private Promise connectionPromise;
+    public Promise updatePromise;
     private PaymentIntent currentPaymentIntent;
     private TokenProvider tokenProvider;
 
@@ -121,6 +122,7 @@ public class RNStripeTerminalModule
             WritableMap methodMap = Arguments.createMap();
             methodMap.putInt("ordinal", dm.ordinal());
             methodMap.putString("name", dm.name());
+            discoveryMethods.pushMap(methodMap);
         }
 
         WritableArray deviceTypes = Arguments.createArray();
@@ -134,7 +136,7 @@ public class RNStripeTerminalModule
             deviceTypes.pushMap(deviceMap);
         }
 
-        constants.put("DiscoveryMethods", discoveryMethodNames);
+        constants.put("DiscoveryMethods", discoveryMethods);
         constants.put("DeviceTypes", deviceTypes);
 
         return constants;
@@ -694,6 +696,7 @@ public class RNStripeTerminalModule
 
     @ReactMethod
     public void installAvailableUpdate(Promise promise) {
+        updatePromise = promise;
         Terminal.getInstance().installAvailableUpdate();
     }
 

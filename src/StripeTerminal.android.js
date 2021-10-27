@@ -12,9 +12,9 @@ let _configured = false;
 
 class RNStripeTerminal {
 
-  DiscoveryMethods = constants.DiscoveryMethods.reduce((dict, entry) => ({...dict, [entry.ordinal]: entry.name}), {})
+  DiscoveryMethods = constants.DiscoveryMethods.reduce((dict, entry) => ({...dict, [entry.name]: entry.ordinal}), {})
 
-  AvailableMethods = ['INTERNET', 'BLUETOOTH'];
+  AvailableMethods = ['INTERNET', 'BLUETOOTH_SCAN'];
 
   DeviceTypes = {
     BLUETOOTH_SCAN: ['WISEPAD_3', 'STRIPE_M2', 'CHIPPER_2X'],

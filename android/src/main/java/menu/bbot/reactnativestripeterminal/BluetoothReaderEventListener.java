@@ -22,6 +22,7 @@ class BluetoothReaderEventListener implements BluetoothReaderListener {
 
     public void onFinishInstallingUpdate(ReaderSoftwareUpdate update, TerminalException e){
         manager.emit("FinishedInstallingUpdate", null);
+        manager.updatePromise.resolve(true);
     }
 
     public void onReportAvailableUpdate(ReaderSoftwareUpdate update){
