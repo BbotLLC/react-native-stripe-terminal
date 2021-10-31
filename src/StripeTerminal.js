@@ -162,6 +162,7 @@ class RNStripeTerminal {
   }
 
   createPaymentIntent = async (parameters) => {
+    this.cancelling = false;
     this._clientSecret = await this.settings.createPaymentIntent(parameters);
     return this._clientSecret;
   }
@@ -183,6 +184,7 @@ class RNStripeTerminal {
   }
 
   cancelCollectPaymentMethod = async () => {
+    this.cancelling = true;
     return await this.terminal.cancelCollectPaymentMethod();
   }
 
@@ -195,6 +197,7 @@ class RNStripeTerminal {
   confirmPaymentIntent = () => this.processPayment()
 
   readReusableCard = async () => {
+    this.cancelling = false;
     const result = await this.terminal.readReusableCard();
     if (result.error) return result;
 
@@ -202,6 +205,7 @@ class RNStripeTerminal {
   }
 
   cancelReadReusableCard = () => {
+    this.cancelling = true;
     return this.terminal.cancelReadReusableCard();
   }
 

@@ -100,8 +100,6 @@ class RNStripeTerminal {
     const emitter = new NativeEventEmitter(StripeTerminal);
 
     this.listener = emitter.addListener("StripeTerminalEvent", async (data) => {
-      console.log("StripeTerminalJS got event: ", data.event, data.data);
-
       // UnexpectedDisconnect doesn't get called it appears
       switch (data.event) {
         case 'RequestConnectionToken':
@@ -118,16 +116,12 @@ class RNStripeTerminal {
           if (this._discoverReadersCB) this._discoverReadersCB(data.data);
           break;
         case 'StartInstallingUpdate':
-          console.log('Starting to install update');
-
           break;
         case 'ReaderSoftwareUpdateProgress':
           if (this._progressCallback) this._progressCallback(data.data);
           break;
         case 'UpdateAvailable':
-          console.log("Reader Update is Available");
           break;
-
         case 'ConnectionStatusChange':
           this.readerStatus = data.data;
           switch (data.data) {
@@ -272,10 +266,11 @@ class RNStripeTerminal {
   };
 
   async createPaymentIntent(parameters = {}) {
+    this.cancelling = false;
     if (!parameters.currency) parameters.currency = "usd";
     const reader = await this.getConnectedReader();
 
-    if (reader.internet_reader) {
+    if (this.DeviceTypes.INTERNET.includes(reader.device_type)) {
       const clientSecret = await this.settings.createPaymentIntent(parameters);
       return await StripeTerminal.retrievePaymentIntent(clientSecret);
     } else {
@@ -292,6 +287,7 @@ class RNStripeTerminal {
   }
 
   async cancelCollectPaymentMethod() {
+    this.cancelling = true;
     return await StripeTerminal.cancelCollectPaymentMethod();
   };
 
@@ -300,10 +296,12 @@ class RNStripeTerminal {
   };
 
   async readReusableCard() {
+    this.cancelling = false;
     return await StripeTerminal.readReusableCard();
   };
 
   async cancelReadReusableCard() {
+    this.cancelling = true;
     return await StripeTerminal.cancelReadReusableCard();
   };
 
