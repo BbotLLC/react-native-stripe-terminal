@@ -1,9 +1,9 @@
 package menu.bbot.reactnativestripeterminal.callbacks;
 import menu.bbot.reactnativestripeterminal.TerminalStateManager;
 import com.facebook.react.bridge.Promise;
-import com.stripe.stripeterminal.callable.ReaderCallback;
-import com.stripe.stripeterminal.model.external.Reader;
-import com.stripe.stripeterminal.model.external.TerminalException;
+import com.stripe.stripeterminal.external.callable.ReaderCallback;
+import com.stripe.stripeterminal.external.models.Reader;
+import com.stripe.stripeterminal.external.models.TerminalException;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -22,7 +22,9 @@ public final class ConnectionCallback implements ReaderCallback {
 
     @Override
     public void onSuccess(@NotNull Reader reader){
+
         this.manager.onConnectReader(reader, promise);
+
     }
 
     @Override

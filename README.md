@@ -32,17 +32,14 @@
 ```javascript
 import Stripe from 'react-native-stripe-terminal';
 
-// TODO: What to do with the module?
-
-let isInitialized = await Stripe.isInitialized();
-if(!isInitialized){
-    await Stripe.init({
-        url: // stripe_auth url,
-        authToken: //stripe public auth token
-    });
-
-
+const startStripe = async () => {
+	await Stripe.init({
+		fetchConnectionToken: API.getStripeConnectionToken,
+		createPaymentIntent: API.createStripePaymentIntent,  // required for Internet Terminals
+		autoReconnect: true
+	});
 }
-
 ```
-  
+
+See `src/StripeTerminal.js` for Web functionality and `src/StripeTerminal.android.js` for Android.
+Most API calls are cross-compatible (when applicable);

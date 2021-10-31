@@ -1,7 +1,7 @@
 {
   "name": "react-native-stripe-terminal",
-  "version": "1.0.17",
-  "description": "",
+  "version": "2.4.0",
+  "description": "Stripe Terminal Android 2.4.0",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -11,11 +11,22 @@
   ],
   "author": "Gilles St-Cyr",
   "license": "",
+  "dependencies": {
+    "@stripe/terminal-js": "^0.8.0",
+    "lodash": "^4.17.21"
+  },
   "peerDependencies": {
+    "@babel/runtime": "^7.4.3",
+    "lodash": "^4.17.21",
     "react-native": ">= 0.41.2"
   },
-  "dependencies": {
-    "@babel/runtime": "^7.4.3",
-    "lodash": "^4.17.11"
-  }
+  "files": [
+    "android/",
+    "ios/",
+    "src/",
+    "index.js",
+    "package.json",
+    "package-lock.json",
+    "README.md"
+  ]
 }

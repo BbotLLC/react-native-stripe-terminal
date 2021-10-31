@@ -1,6 +1,8 @@
 
 package menu.bbot.reactnativestripeterminal;
 
+import android.app.Application;
+
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -10,6 +12,7 @@ import com.facebook.react.bridge.NativeModule;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.uimanager.ViewManager;
 import com.facebook.react.bridge.JavaScriptModule;
+import com.stripe.stripeterminal.TerminalApplicationDelegate;
 
 
 public class RNStripeTerminalPackage implements ReactPackage {
@@ -29,5 +32,13 @@ public class RNStripeTerminalPackage implements ReactPackage {
     @Override
     public List<ViewManager> createViewManagers(ReactApplicationContext reactContext) {
       return Collections.emptyList();
+    }
+
+    public static void onCreate(Application app) {
+        TerminalApplicationDelegate.onCreate(app);
+    }
+
+    public static void onTrimMemory(Application app, int level) {
+        TerminalApplicationDelegate.onTrimMemory(app, level);
     }
 }

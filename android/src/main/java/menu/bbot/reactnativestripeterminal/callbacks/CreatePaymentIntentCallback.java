@@ -2,9 +2,9 @@ package menu.bbot.reactnativestripeterminal.callbacks;
 
 import menu.bbot.reactnativestripeterminal.TerminalStateManager;
 import com.facebook.react.bridge.Promise;
-import com.stripe.stripeterminal.callable.PaymentIntentCallback;
-import com.stripe.stripeterminal.model.external.PaymentIntent;
-import com.stripe.stripeterminal.model.external.TerminalException;
+import com.stripe.stripeterminal.external.callable.PaymentIntentCallback;
+import com.stripe.stripeterminal.external.models.PaymentIntent;
+import com.stripe.stripeterminal.external.models.TerminalException;
 
 /**
  * A [PaymentIntentCallback] that notifies the [TerminalStateManager] that [PaymentIntent] creation
@@ -20,10 +20,12 @@ public final class CreatePaymentIntentCallback implements PaymentIntentCallback 
         this.promise = promise;
     }
 
+    @Override
     public void onSuccess(PaymentIntent paymentIntent) {
         this.manager.onCreatePaymentIntent(paymentIntent, promise);
     }
 
+    @Override
     public void onFailure(TerminalException e) {
         this.promise.reject("CreatePaymentIntentError", e.getErrorMessage());
         this.manager.onFailure(e);

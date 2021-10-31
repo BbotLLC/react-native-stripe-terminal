@@ -1,8 +1,8 @@
 package menu.bbot.reactnativestripeterminal.callbacks;
 
 import com.facebook.react.bridge.Promise;
-import com.stripe.stripeterminal.callable.Callback;
-import com.stripe.stripeterminal.model.external.TerminalException;
+import com.stripe.stripeterminal.external.callable.Callback;
+import com.stripe.stripeterminal.external.models.TerminalException;
 
 import menu.bbot.reactnativestripeterminal.TerminalStateManager;
 
@@ -19,10 +19,12 @@ public final class DiscoveryCancellationCallback implements Callback {
         this.promise = promise;
     }
 
+    @Override
     public void onSuccess() {
         this.manager.onCancelDiscovery(promise);
     }
 
+    @Override
     public void onFailure(TerminalException e) {
         promise.reject("DiscoveryCancellationError", e.getErrorMessage());
         this.manager.onFailure(e);
