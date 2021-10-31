@@ -298,7 +298,7 @@ public class RNStripeTerminalModule
             if(readerLocation != null) {
                 locationId = reader.getLocation().getId();
             } else {
-                locationId = "tml_EPf4XQx4i4rtHP";
+                locationId = "tml_EPf4XQx4i4rtHP"; // TODO: this should be pulled from discovery location id
             }
         }
 
