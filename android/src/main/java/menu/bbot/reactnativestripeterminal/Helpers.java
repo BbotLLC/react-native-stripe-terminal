@@ -19,6 +19,7 @@ public class Helpers {
 
     public static WritableMap ReaderToMap(Reader reader) {
         WritableMap readerMap = Arguments.createMap();
+        readerMap.putString("id", reader.getId());
         readerMap.putString("serial_number", reader.getSerialNumber());
         Float batt = reader.getBatteryLevel();
         if (batt != null) {
