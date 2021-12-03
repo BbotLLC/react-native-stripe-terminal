@@ -265,12 +265,18 @@ class RNStripeTerminal {
     return await StripeTerminal.disconnectReader();
   };
 
-  async createPaymentIntent(parameters = {}) {
+  /**
+   *
+   * @param parameters {object} Parameters to pass to `createPaymentIntent` call
+   * @param forceRemote {boolean} Always use the `createPaymentIntent` function passed in on init
+   * @returns {Promise<*>}
+   */
+  async createPaymentIntent(parameters = {}, forceRemote = true) {
     this.cancelling = false;
     if (!parameters.currency) parameters.currency = "usd";
     const reader = await this.getConnectedReader();
 
-    if (this.DeviceTypes.INTERNET.includes(reader.device_type)) {
+    if (forceRemote || this.DeviceTypes.INTERNET.includes(reader.device_type)) {
       const clientSecret = await this.settings.createPaymentIntent(parameters);
       return await StripeTerminal.retrievePaymentIntent(clientSecret);
     } else {
