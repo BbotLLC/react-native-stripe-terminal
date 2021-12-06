@@ -23,6 +23,9 @@ class RNStripeTerminal {
 
   settings = {
     fetchConnectionToken: () => { throw new Error("fetchConnectionToken is required"); },
+    /**
+     * createPaymentIntent should return a dict with `clientSecret` as the key
+     */
     createPaymentIntent: () => { throw "createPaymentIntent is required" }, // used by internet terminals
     scanTimeout: 120,
     simulated: false,
@@ -277,7 +280,7 @@ class RNStripeTerminal {
     const reader = await this.getConnectedReader();
 
     if (forceRemote || this.DeviceTypes.INTERNET.includes(reader.device_type)) {
-      const clientSecret = await this.settings.createPaymentIntent(parameters);
+      const {clientSecret} = await this.settings.createPaymentIntent(parameters);
       return await StripeTerminal.retrievePaymentIntent(clientSecret);
     } else {
       return await StripeTerminal.createPaymentIntent(parameters);
