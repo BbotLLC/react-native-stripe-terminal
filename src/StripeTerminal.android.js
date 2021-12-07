@@ -136,6 +136,7 @@ class RNStripeTerminal {
               break;
             case 'NOT_CONNECTED':
               this.readerConnected = false;
+              this.connectedReader = null;
               break;
           }
           break;
@@ -172,6 +173,7 @@ class RNStripeTerminal {
   async getConnectedReader() {
     let reader = await StripeTerminal.getConnectedReader();
     this.readerConnected = !!reader;
+    this.connectedReader = reader;
     this.readerStatus = reader ? "CONNECTED" : "NOT_CONNECTED";
     //this.trigger('ConnectionStatusChange', this.readerStatus);
     return reader;
@@ -227,6 +229,7 @@ class RNStripeTerminal {
   async connectInternetReader(reader) {
     let response = await StripeTerminal.connectInternetReader(reader.serial_number);
     this._lastConnectedReader = reader;
+    this.connectedReader = reader;
     this.readerConnected = response;
     if (response) {
       this._discoverReadersCB = null;
@@ -245,6 +248,7 @@ class RNStripeTerminal {
     let response = await StripeTerminal.connectBluetoothReader(reader.serial_number, config);
     this._lastConnectedReader = reader;
     this.readerConnected = response;
+    this.connectedReader = reader;
     if (response) {
       this._discoverReadersCB = null;
     }
@@ -256,6 +260,7 @@ class RNStripeTerminal {
     let response = await StripeTerminal.connectEmbeddedReader(reader.serial_number);
     this._lastConnectedReader = reader;
     this.readerConnected = response;
+    this.connectedReader = reader;
     if (response) {
       this._discoverReadersCB = null;
     }
@@ -265,8 +270,17 @@ class RNStripeTerminal {
 
 
   async disconnectReader() {
+    this.connectedReader = null;
     return await StripeTerminal.disconnectReader();
   };
+
+   /**
+   * @param {object} config - A config object
+   * @param {string} config.testCardNumber - The test card number to use
+   */
+  setSimulatorConfiguration = (config) => {
+    StripeTerminal.setSimulatorConfiguration(config);
+  }
 
   /**
    *

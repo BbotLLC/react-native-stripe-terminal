@@ -90,5 +90,11 @@ export default {
     REQUIRES_PAYMENT_METHOD: {
       "ordinal": 1,
     }
-  }
+  },
+  "SimulatedCardType" : [
+    {
+      "ordinal": 0,
+
+    }
+  ]
 }

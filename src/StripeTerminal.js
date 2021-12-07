@@ -152,6 +152,15 @@ class RNStripeTerminal {
   }
 
   /**
+   *
+   * @param {object} config - A config object
+   * @param {string} config.testCardNumber - The test card number to use
+   */
+  setSimulatorConfiguration = (config) => {
+    this.terminal.setSimulatorConfiguration(config);
+  }
+
+  /**
    * Returns the reader’s payment status.
    * PaymentStatus can be one of not_ready, ready, waiting_for_input, or processing.
    * @returns {String}

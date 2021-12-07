@@ -19,6 +19,10 @@ import com.facebook.react.modules.core.DeviceEventManagerModule;
 import com.stripe.stripeterminal.Terminal;
 import com.stripe.stripeterminal.external.callable.PaymentIntentCallback;
 import com.stripe.stripeterminal.external.callable.ReaderCallback;
+import com.stripe.stripeterminal.external.models.SimulateReaderUpdate;
+import com.stripe.stripeterminal.external.models.SimulatedCard;
+import com.stripe.stripeterminal.external.models.SimulatedCardType;
+import com.stripe.stripeterminal.external.models.SimulatorConfiguration;
 import com.stripe.stripeterminal.log.LogLevel;
 import com.stripe.stripeterminal.external.callable.Callback;
 import com.stripe.stripeterminal.external.callable.Cancelable;
@@ -116,6 +120,13 @@ public class RNStripeTerminalModule
                 .map(e -> e.name())
                 .collect(Collectors.toList());
 
+     /*   WritableArray simulatedCardTypes = Arguments.createArray();
+        for(SimulatedCardType sm : SimulatedCardType.values()){
+            WritableMap methodMap = Arguments.createMap();
+            methodMap.putInt("ordinal", sm.ordinal());
+            methodMap.putString("name", sm.name());
+            simulatedCardTypes.pushMap(methodMap);
+        }*/
 
         WritableArray discoveryMethods = Arguments.createArray();
         for(DiscoveryMethod dm : DiscoveryMethod.values()){
@@ -427,6 +438,13 @@ public class RNStripeTerminalModule
     public void getAvailableReaders(Promise promise) {
         WritableArray wa = getReadersArray(availableReaders);
         promise.resolve(wa);
+    }
+
+    @ReactMethod
+    public void setSimulatorConfiguration(ReadableMap options) {
+        Terminal terminal = Terminal.getInstance();
+        SimulatedCard card = new SimulatedCard(options.getString("testCardNumber"));
+        terminal.setSimulatorConfiguration(new SimulatorConfiguration(SimulateReaderUpdate.NONE, card));
     }
 
 
