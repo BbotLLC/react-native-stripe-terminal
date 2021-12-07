@@ -25,6 +25,9 @@ class RNStripeTerminal {
     fetchConnectionToken: () => {
       throw "onFetchConnectionToken was not initialized"
     },
+    /**
+     * createPaymentIntent should return a dict with `clientSecret` as the key
+     */
     createPaymentIntent: () => {
       throw "createPaymentIntent is undefined. Must be initialized"
     },
@@ -163,7 +166,8 @@ class RNStripeTerminal {
 
   createPaymentIntent = async (parameters) => {
     this.cancelling = false;
-    this._clientSecret = await this.settings.createPaymentIntent(parameters);
+    const {clientSecret} = await this.settings.createPaymentIntent(parameters);
+    this._clientSecret = clientSecret;
     return this._clientSecret;
   }
 
