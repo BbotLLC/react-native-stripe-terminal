@@ -5,6 +5,7 @@ import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.ReadableMapKeySetIterator;
 import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.WritableMap;
+import com.stripe.stripeterminal.external.api.ApiError;
 import com.stripe.stripeterminal.external.models.Address;
 import com.stripe.stripeterminal.external.models.CardDetails;
 import com.stripe.stripeterminal.external.models.DeviceType;
@@ -12,6 +13,7 @@ import com.stripe.stripeterminal.external.models.Location;
 import com.stripe.stripeterminal.external.models.PaymentIntent;
 import com.stripe.stripeterminal.external.models.PaymentMethod;
 import com.stripe.stripeterminal.external.models.Reader;
+import com.stripe.stripeterminal.external.models.TerminalException;
 
 import java.util.HashMap;
 
@@ -109,6 +111,22 @@ public class Helpers {
         WritableArray result = Arguments.createArray();
 
         // Todo: Write magic
+        return result;
+    }
+
+
+    public static WritableMap ExceptionToMap(TerminalException exception) {
+        WritableMap result = Arguments.createMap();
+        WritableMap errorMap = Arguments.createMap();
+        ApiError apiError = exception.getApiError();
+        if(apiError != null) {
+            errorMap.putString("apiError", apiError.toString());
+        }
+        errorMap.putString("message", exception.getErrorMessage());
+        errorMap.putString("code", exception.getErrorCode().toString());
+
+        result.putMap("error", errorMap);
+
         return result;
     }
 

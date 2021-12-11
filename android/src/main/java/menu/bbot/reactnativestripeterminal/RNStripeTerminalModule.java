@@ -129,7 +129,7 @@ public class RNStripeTerminalModule
         }*/
 
         WritableArray discoveryMethods = Arguments.createArray();
-        for(DiscoveryMethod dm : DiscoveryMethod.values()){
+        for (DiscoveryMethod dm : DiscoveryMethod.values()) {
             WritableMap methodMap = Arguments.createMap();
             methodMap.putInt("ordinal", dm.ordinal());
             methodMap.putString("name", dm.name());
@@ -137,7 +137,7 @@ public class RNStripeTerminalModule
         }
 
         WritableArray deviceTypes = Arguments.createArray();
-        for(DeviceType dt : DeviceType.values()){
+        for (DeviceType dt : DeviceType.values()) {
             WritableMap deviceMap = Arguments.createMap();
             deviceMap.putString("device_name", dt.getDeviceName());
             deviceMap.putString("name", dt.name());
@@ -189,10 +189,10 @@ public class RNStripeTerminalModule
 
     @ReactMethod
     public void setConnectionToken(String token, String errorMsg, Promise promise) {
-        if(tokenProvider.callback != null){
-            if(errorMsg!=null && !errorMsg.trim().isEmpty()){
+        if (tokenProvider.callback != null) {
+            if (errorMsg != null && !errorMsg.trim().isEmpty()) {
                 tokenProvider.callback.onFailure(new ConnectionTokenException(errorMsg));
-            }else{
+            } else {
                 tokenProvider.callback.onSuccess(token);
             }
         }
@@ -241,7 +241,7 @@ public class RNStripeTerminalModule
 
         DiscoveryMethod discoveryMethod = DiscoveryMethod.BLUETOOTH_SCAN; // default
 
-        if (options.hasKey("discoveryMethod") ) {
+        if (options.hasKey("discoveryMethod")) {
             discoveryMethod = DiscoveryMethod.values()[options.getInt("discoveryMethod")];
         }
 
@@ -306,7 +306,7 @@ public class RNStripeTerminalModule
 
         String locationId = options.getString("locationId");
         if (locationId == null) {
-            if(readerLocation != null) {
+            if (readerLocation != null) {
                 locationId = reader.getLocation().getId();
             } else {
                 locationId = "tml_EPf4XQx4i4rtHP"; // TODO: this should be pulled from discovery location id
@@ -324,7 +324,17 @@ public class RNStripeTerminalModule
                         reader,
                         new BluetoothConnectionConfiguration(locationId),
                         new BluetoothReaderEventListener(this),
-                        new ConnectionCallback(this, promise)
+                        new ReaderCallback() {
+                            @Override
+                            public void onSuccess(@NonNull Reader reader) {
+                                onConnectReader(reader, promise);
+                            }
+
+                            @Override
+                            public void onFailure(@NonNull TerminalException e) {
+                                promise.reject("ConnectionError", e.getErrorMessage());
+                            }
+                        }
                 );
             } catch (Exception exception) {
                 promise.reject("Error", exception.getMessage());
@@ -337,7 +347,7 @@ public class RNStripeTerminalModule
     @ReactMethod
     public void connectInternetReader(String readerId, Promise promise) {
         Reader reader = findReaderBySerial(readerId);
-        Log.i(TAG, "connectInternetReader: "+readerId);
+        Log.i(TAG, "connectInternetReader: " + readerId);
 
         if (reader == null) {
             promise.reject("Error", "Error connecting to reader. Please try again");
@@ -345,7 +355,7 @@ public class RNStripeTerminalModule
             try {
                 Reader connectedReader = Terminal.getInstance().getConnectedReader();
                 if (connectedReader != null) {
-                    Log.i(TAG, "disconnecting already connected reader: "+connectedReader.getSerialNumber());
+                    Log.i(TAG, "disconnecting already connected reader: " + connectedReader.getSerialNumber());
                     Terminal.getInstance().disconnectReader(new DisconnectCallback(this, null));
                 }
                 Terminal.getInstance().connectInternetReader(
@@ -353,14 +363,12 @@ public class RNStripeTerminalModule
                         new InternetConnectionConfiguration(),
                         new ReaderCallback() {
                             @Override
-                            public void onSuccess(@NonNull Reader successReader){
-                                Log.i(TAG, "successReader" + successReader.toString());
-                                Log.i(TAG, "Successfully connected to reader "+reader.getSerialNumber());
+                            public void onSuccess(@NonNull Reader successReader) {
                                 onConnectReader(reader, promise);
                             }
 
                             @Override
-                            public void onFailure(TerminalException e){
+                            public void onFailure(TerminalException e) {
                                 promise.reject("ConnectionError", e.getErrorMessage());
                                 onFailure(e);
                             }
@@ -388,7 +396,17 @@ public class RNStripeTerminalModule
                 Terminal.getInstance().connectEmbeddedReader(
                         reader,
                         new EmbeddedConnectionConfiguration(this),
-                        new ConnectionCallback(this, promise)
+                        new ReaderCallback() {
+                            @Override
+                            public void onSuccess(@NonNull Reader reader) {
+                                onConnectReader(reader, promise);
+                            }
+
+                            @Override
+                            public void onFailure(@NonNull TerminalException e) {
+
+                            }
+                        }
                 );
             } catch (Exception exp) {
 
@@ -447,81 +465,121 @@ public class RNStripeTerminalModule
         terminal.setSimulatorConfiguration(new SimulatorConfiguration(SimulateReaderUpdate.NONE, card));
     }
 
+    @ReactMethod
+    public void getSimulatorConfiguration(Promise promise) {
+        Terminal terminal = Terminal.getInstance();
+        SimulatorConfiguration config = terminal.getSimulatorConfiguration();
+        WritableMap configMap = Arguments.createMap();
+        configMap.putString("testCardNumber", config.getSimulatedCard().toString());
+        promise.resolve(configMap);
+    }
+
+    /**
+     * Reads a card for online reuse.
+     *
+     * Online payments initiated from Terminal do not benefit from the lower pricing and liability shift given to standard Terminal payments. Most integrations do not need to use readReusableCard. To simply collect an in-person payment from a customer, use the standard flow.
+     *
+     * Returns a Promise that resolves to an object with the following fields:
+     *
+     * payment_method: The PaymentMethod object, if the command succeeded.
+     * error: An error, if the command failed.
+     *
+     * Note: Stripe is inconsistent using camelCase vs snake_case in the Web Terminal implementation, and I am simply copying it here.
+     * (https://stripe.com/docs/terminal/references/api/js-sdk#read-reusable-card)
+     *
+     * @param promise
+     */
 
     @ReactMethod
     public void readReusableCard(Promise promise) {
-        try {
-            Terminal terminal = Terminal.getInstance();
-            ReadReusableCardParameters params = new ReadReusableCardParameters.Builder()
-                    .build();
-            if(cancelableReusable != null){
+        Terminal terminal = Terminal.getInstance();
+        ReadReusableCardParameters.Builder params = new ReadReusableCardParameters.Builder();
+        if (cancelableReusable != null) {
+            // todo: should throw error here
+        }
 
+        cancelableReusable = terminal.readReusableCard(params.build(), new PaymentMethodCallback() {
+            @Override
+            public void onSuccess(@Nonnull PaymentMethod paymentMethod) {
+                WritableMap response = Arguments.createMap();
+                response.putMap("payment_method", Helpers.PaymentMethodToMap(paymentMethod));
+                promise.resolve(response);
+                cancelableReusable = null;
             }
 
-            cancelableReusable = terminal.readReusableCard(params, new PaymentMethodCallback() {
-                @Override
-                public void onSuccess(@Nonnull PaymentMethod paymentMethod) {
-                    promise.resolve(Helpers.PaymentMethodToMap(paymentMethod));
-                    cancelableReusable = null;
-                }
-
-                @Override
-                public void onFailure(@Nonnull TerminalException e) {
-                    Log.i(TAG, "ReadReusableCard:onFailure");
-                    promise.reject("Error", e.getErrorMessage());
-                }
-            });
-
-        } catch (Exception error) {
-
-            promise.reject("readReusableCardError", error.getMessage());
-        }
+            @Override
+            public void onFailure(@Nonnull TerminalException e) {
+                Log.i(TAG, "ReadReusableCard:onFailure");
+                promise.resolve(Helpers.ExceptionToMap(e));
+            }
+        });
     }
+
+    /**
+     * Cancels an outstanding readReusableCard command.
+     *
+     * Returns a Promise that resolves to an empty object once the command has been successfully canceled. If cancelation fails, the Promise resolves to an object with an error.
+     * @param promise
+     */
 
     @ReactMethod
     public void cancelReadReusableCard(Promise promise) {
+        WritableMap response = Arguments.createMap();
         if (cancelableReusable == null) {
-            promise.reject("Error", "Nothing to cancel");
+            promise.resolve(response);
         } else {
             if (!cancelableReusable.isCompleted()) {
                 cancelableReusable.cancel(new Callback() {
                     @Override
                     public void onSuccess() {
-                        promise.resolve(true);
+                        promise.resolve(response);
                     }
+
                     @Override
                     public void onFailure(@Nonnull TerminalException e) {
-                        promise.reject("CancelReadReusableCardError", e.getErrorMessage());
+                        promise.resolve(Helpers.ExceptionToMap(e));
                     }
                 });
             } else {
-                promise.resolve(true);
+                promise.resolve(response);
                 cancelableReusable = null;
             }
         }
     }
 
 
+    /**
+     * Creates a paymentIntent.
+     *
+     * Returns a Promise that resolves to an object with the following Fields:
+     * payment_intent: The paymentIntent object
+     * error: An error, if the command failed
+     *
+     * @param parameters {ReadableMap}
+     * @param promise
+     */
+
+
     @ReactMethod
     public void createPaymentIntent(ReadableMap parameters, Promise promise) {
 
         PaymentIntentParameters.Builder builder = new PaymentIntentParameters.Builder();
-        if(parameters.hasKey("amount")){
+        if (parameters.hasKey("amount")) {
             builder.setAmount((long) parameters.getInt("amount"));
         }
-        if(parameters.hasKey("currency")){
+        if (parameters.hasKey("currency")) {
             builder.setCurrency(parameters.getString("currency"));
         }
-        if(parameters.hasKey("statement_descriptor")){
+        if (parameters.hasKey("statement_descriptor")) {
             builder.setStatementDescriptor(parameters.getString("statement_descriptor"));
         }
-        if(parameters.hasKey("setup_future_usage")){
+        if (parameters.hasKey("setup_future_usage")) {
             builder.setSetupFutureUsage(parameters.getString("setup_future_usage"));
         }
-        if(parameters.hasKey("on_behalf_of")){
+        if (parameters.hasKey("on_behalf_of")) {
             builder.setOnBehalfOf(parameters.getString("on_behalf_of"));
         }
-        if(parameters.hasKey("metadata")){
+        if (parameters.hasKey("metadata")) {
             ReadableMap md = parameters.getMap("metadata");
             HashMap<String, String> metadata = Helpers.ReadableMapToHashMap(md);
             builder.setMetadata(metadata);
@@ -534,138 +592,158 @@ public class RNStripeTerminalModule
         Terminal.getInstance().createPaymentIntent(params, new PaymentIntentCallback() {
             @Override
             public void onSuccess(@NonNull PaymentIntent paymentIntent) {
-                onCreatePaymentIntent(paymentIntent, promise);
+                currentPaymentIntent = paymentIntent;
+                WritableMap pi = Helpers.PaymentIntentToMap(paymentIntent);
+                WritableMap response = Arguments.createMap();
+                response.putMap("paymentIntent", pi);
+                response.putString("clientSecret", paymentIntent.getClientSecret());
+                promise.resolve(response);
             }
 
             @Override
-            public void onFailure(TerminalException e) {
-                promise.reject("CreatePaymentIntentError", e.getErrorMessage());
+            public void onFailure(@NonNull TerminalException e) {
+                promise.resolve(Helpers.ExceptionToMap(e));
                 parent.onFailure(e);
             }
         });
     }
 
     /**
-     * Notify the `Activity` that a [PaymentIntent] has been created
+     * Retrieves a paymentIntent.
+     *
+     * Returns a Promise that resolves to an object with the following Fields:
+     * payment_intent: The paymentIntent object
+     * error: An error, if the command failed
+     *
+     * @param clientSecret {String}
+     * @param promise
      */
-    public void onCreatePaymentIntent(PaymentIntent paymentIntent, Promise promise) {
-
-        this.currentPaymentIntent = paymentIntent;
-        WritableMap pi = Helpers.PaymentIntentToMap(paymentIntent);
-
-        promise.resolve(pi);
-    }
 
     @ReactMethod
     public void retrievePaymentIntent(String clientSecret, Promise promise) {
         Terminal.getInstance().retrievePaymentIntent(clientSecret,
+                new PaymentIntentCallback() {
+                    @Override
+                    public void onSuccess(@NonNull PaymentIntent paymentIntent) {
+                        currentPaymentIntent = paymentIntent;
+                        WritableMap response = Arguments.createMap();
+                        response.putMap("paymentIntent", Helpers.PaymentIntentToMap(paymentIntent));
+                        promise.resolve(response);
+                    }
+
+                    @Override
+                    public void onFailure(@NonNull TerminalException e) {
+                        promise.resolve(Helpers.ExceptionToMap(e));
+                    }
+                }
+        );
+    }
+
+    /**
+     * Begins collecting a payment method for a previously created/retrieved PaymentIntent.
+     *
+     * Returns a Promise that resolves to an object with the following fields:
+     *
+     * paymentIntent: The updated PaymentIntent object, if the command succeeded.
+     * error: An error, if the command failed.
+     * @param promise
+     */
+
+    @ReactMethod
+    public void collectPaymentMethod(Promise promise) {
+        if (this.currentPaymentIntent == null) {
+            WritableMap response = Arguments.createMap();
+            response.putString("message", "Attempting to collect payment method before creation of paymentIntent");
+            promise.resolve(response);
+            return;
+        }
+
+        this.cancelableCollect = Terminal.getInstance().collectPaymentMethod(
+            this.currentPaymentIntent,
             new PaymentIntentCallback() {
                 @Override
                 public void onSuccess(@NonNull PaymentIntent paymentIntent) {
                     currentPaymentIntent = paymentIntent;
-                    promise.resolve(Helpers.PaymentIntentToMap(paymentIntent));
+                    WritableMap response = Arguments.createMap();
+                    response.putMap("paymentIntent", Helpers.PaymentIntentToMap(paymentIntent));
+                    promise.resolve(response);
                 }
 
                 @Override
                 public void onFailure(@NonNull TerminalException e) {
-                    promise.reject("RETRIEVE_FAILED", "Error retrieving the payment intent");
+                    promise.resolve(Helpers.ExceptionToMap(e));
+
                 }
             }
         );
     }
 
-    @ReactMethod
-    public void collectPaymentMethod(Promise promise) {
-        if (this.currentPaymentIntent == null) {
-            promise.reject("Error", "No existing paymentIntent found");
-            return;
-        }
-
-        this.cancelableCollect = Terminal.getInstance().collectPaymentMethod(
-                this.currentPaymentIntent,
-                new CollectPaymentMethodCallback(this, promise)
-        );
-    }
-
+    /**
+     * Cancels an outstanding collectPaymentMethod command.
+     *
+     * Returns a Promise that resolves to an empty object once the command has been successfully canceled. If cancelation fails, the Promise resolves to an object with an error
+     * @param promise
+     */
 
     @ReactMethod
     public void cancelCollectPaymentMethod(Promise promise) {
+        WritableMap response = Arguments.createMap();
         if (cancelableCollect == null) {
-            promise.reject("Error", "Nothing to cancel");
+            promise.resolve(response);
         } else {
             if (!cancelableCollect.isCompleted()) {
                 cancelableCollect.cancel(new Callback() {
                     @Override
                     public void onSuccess() {
-                        promise.resolve(true);
+                        cancelableCollect = null;
+                        promise.resolve(response);
                     }
+
                     @Override
                     public void onFailure(@Nonnull TerminalException e) {
-                        promise.reject("CancelCollectPaymentMethodError", e.getErrorMessage());
+                        promise.resolve(Helpers.ExceptionToMap(e));
                     }
                 });
             } else {
-                promise.resolve(true);
+                promise.resolve(response);
                 cancelableCollect = null;
             }
         }
     }
 
-
     /**
-     * Notify the `Activity` that a payment method has been collected
+     * Processes a payment after a payment method has been collected.
+     *
+     * This method takes a single parameter, a PaymentIntent object obtained from a successful call to collectPaymentMethod.
+     *
+     * Returns a Promise that resolves to an object with the following fields:
+     *
+     * paymentIntent: The confirmed PaymentIntent object, if the command succeeded.
+     * error: An error, if the command failed. For more information, see <a href="https://stripe.com/docs/terminal/payments/collect-payment#handling-processing-failures">Handling processing failures.</a>
+     *
+     * @param promise
      */
-    public void onCollectPaymentMethod(PaymentIntent paymentIntent, Promise promise) {
-        this.currentPaymentIntent = paymentIntent;
-
-        WritableMap pi = Helpers.PaymentIntentToMap(paymentIntent);
-        promise.resolve(pi);
-
-    }
 
     @ReactMethod
-    public void confirmPaymentIntent(Promise promise) {
-
+    public void processPayment(Promise promise) {
         Terminal.getInstance().processPayment(
-                currentPaymentIntent,
-                new ConfirmPaymentIntentCallback(this, promise)
+            currentPaymentIntent,
+            new PaymentIntentCallback() {
+                @Override
+                public void onSuccess(@NonNull PaymentIntent paymentIntent) {
+                    currentPaymentIntent = paymentIntent;
+                    WritableMap response = Arguments.createMap();
+                    response.putMap("paymentIntent", Helpers.PaymentIntentToMap(paymentIntent));
+                    promise.resolve(response);
+                }
+
+                @Override
+                public void onFailure(@NonNull TerminalException e) {
+                    promise.resolve(Helpers.ExceptionToMap(e));
+                }
+            }
         );
     }
-
-    /**
-     * Notify the `Activity` that a [PaymentIntent] has been confirmed
-     */
-    public void onConfirmPaymentIntent(PaymentIntent paymentIntent, Promise promise) {
-        // This is called from ConfirmPaymentIntentCallback which is passed into collectPaymentMethod
-        this.currentPaymentIntent = paymentIntent;
-
-        WritableMap pi = Helpers.PaymentIntentToMap(paymentIntent);
-
-        promise.resolve(pi);
-
-    }
-
-  /* DEPRECATED IN v2
-    @Override
-    public void onRequestReaderInput(ReaderInputOptions options) {
-        // todo trigger event in react
-        System.out.println("Reader requests input in one of the following methods: " +
-                options.toString());
-
-        emit("ReaderStatus", options.toString());
-
-    }*/
-
-    /* DEPRECATED IN V2
-    @Override
-    public void onRequestReaderDisplayMessage(ReaderDisplayMessage prompt) {
-        // Todo trigger event in react
-        System.out.println("Reader prompts for the following action: " +
-                prompt.toString());
-
-        emit("ReaderStatus", prompt.toString());
-    }*/
-
 
     /**
      * Notify the `Activity` that discovery has been canceled
@@ -682,11 +760,13 @@ public class RNStripeTerminalModule
      * Notify the `Activity` that a [Reader] has been connected to
      */
     public void onConnectReader(Reader reader, Promise promise) {
-        promise.resolve(Helpers.ReaderToMap(reader));
+        Log.i(TAG, "Successfully connected to reader " + reader.getSerialNumber());
+        WritableMap response = Arguments.createMap();
+        response.putMap("reader", Helpers.ReaderToMap(reader));
+        promise.resolve(response);
+
         connectionPromise = null;
         discoveryInProgress = false;
-
-        Log.i(TAG, "onConnectReader called");
         emit("ConnectionStatusChange", "CONNECTED");
     }
 
@@ -722,9 +802,15 @@ public class RNStripeTerminalModule
     public void listLocations(ReadableMap options, Promise promise) {
         ListLocationsParameters.Builder builder = new ListLocationsParameters.Builder();
         builder.setLimit(100);
-
-        // params.setEndingBefore()
-        // params.setStartingAfter()
+        if(options.hasKey("ending_before")){
+            builder.setEndingBefore(options.getString("ending_before"));
+        }
+        if(options.hasKey("starting_after")){
+            builder.setEndingBefore(options.getString("starting_after"));
+        }
+        if(options.hasKey("limit")){
+            builder.setLimit(options.getInt("limit"));
+        }
 
         Terminal.getInstance().listLocations(
                 builder.build(),
@@ -744,8 +830,7 @@ public class RNStripeTerminalModule
                     @Override
                     public void onFailure(@NotNull TerminalException e) {
                         Log.i(TAG, "Error fetching locations: " + e.getErrorMessage());
-                        promise.resolve(false);
-                        // promise.reject()
+                        promise.resolve(Helpers.ExceptionToMap(e));
                     }
                 }
         );
@@ -757,20 +842,18 @@ public class RNStripeTerminalModule
     public void onFailure(@NotNull TerminalException e) {
         emit("ReaderError", e.getErrorCode().toString() + ": " + e.getErrorMessage());
         ApiError apiError = e.getApiError();
-        if(apiError != null){
+        if (apiError != null) {
             emit("ApiError", apiError.getMessage());
         }
     }
 
 
-
-
     public void emit(String event, @Nullable Object data) {
-        Log.i(TAG, "emit: " +event+":" + ( data != null ? data.toString() : ""));
+        Log.i(TAG, "emit: " + event + ":" + (data != null ? data.toString() : ""));
         Map<String, Object> m = new HashMap<String, Object>();
         m.put("event", event);
         m.put("data", data);
-        
+
         WritableNativeMap returnObj = Arguments.makeNativeMap(m);
 
         Log.i("emit again", returnObj.toString());
@@ -792,63 +875,5 @@ public class RNStripeTerminalModule
                 .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
                 .emit("StripeTerminalEvent", returnObj);
     }
-
-    /* DEPRECATED
-    @ReactMethod
-    public void checkForUpdate(Promise promise){
-        if(Terminal.isInitialized()){
-
-            ReaderSoftwareUpdateCallback callback = new ReaderSoftwareUpdateCallback() {
-                @Override
-                public void onSuccess(ReaderSoftwareUpdate update) {
-                    availableUpdate = update;
-                    promise.resolve(update != null);
-                }
-
-                @Override
-                public void onFailure(@Nonnull TerminalException e) {
-                    promise.resolve(false);
-                }
-            };
-
-            cancelableUpdate = Terminal.getInstance().checkForUpdate(callback);
-
-        } else {
-            promise.reject("TerminalException", "Terminal Instance not Initialized");
-        }
-    }*/
-
-   /* DEPRECATED
-   @ReactMethod
-    public void installUpdate(Promise promise){
-
-        if(availableUpdate == null) {
-            promise.reject("UpdateError", "An internal error occurred. Please contact support");
-            return;
-        }
-
-        ReaderSoftwareUpdateListener listener = new ReaderSoftwareUpdateListener() {
-            @Override
-            public void onReportReaderSoftwareUpdateProgress(float progress) {
-                emit("updateProgress", progress);
-            }
-        };
-
-        Callback callback = new Callback() {
-            @Override
-            public void onSuccess() {
-                availableUpdate = null;
-                promise.resolve(true);
-            }
-
-            @Override
-            public void onFailure(@Nonnull TerminalException e) {
-                promise.reject("UpdateError", "The update failed to install");
-            }
-        };
-
-        cancelableInstall = Terminal.getInstance().installUpdate(availableUpdate, listener, callback);
-
-    }*/
 
 }

@@ -16,24 +16,9 @@ public interface TerminalStateManager {
     public void onCancelDiscovery(Promise promise);
 
     /**
-     * Notify the `Activity` that a payment method has been collected
-     */
-    public void onCollectPaymentMethod(PaymentIntent paymentIntent, Promise promise);
-
-    /**
-     * Notify the `Activity` that a [PaymentIntent] has been confirmed
-     */
-    public void onConfirmPaymentIntent(PaymentIntent paymentIntent, Promise promise);
-
-    /**
      * Notify the `Activity` that a [Reader] has been connected to
      */
     public void onConnectReader(Reader reader, Promise promise);
-
-    /**
-     * Notify the `Activity` that a [PaymentIntent] has been created
-     */
-    public void onCreatePaymentIntent(PaymentIntent paymentIntent, Promise promise);
 
     /**
      * Notify the `Activity` that we've disconnected from all [Reader]s
