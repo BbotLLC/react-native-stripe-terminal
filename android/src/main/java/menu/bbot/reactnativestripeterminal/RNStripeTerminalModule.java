@@ -71,10 +71,6 @@ import androidx.annotation.NonNull;
 
 import org.jetbrains.annotations.NotNull;
 
-import menu.bbot.reactnativestripeterminal.callbacks.CollectPaymentMethodCallback;
-import menu.bbot.reactnativestripeterminal.callbacks.ConfirmPaymentIntentCallback;
-import menu.bbot.reactnativestripeterminal.callbacks.ConnectionCallback;
-import menu.bbot.reactnativestripeterminal.callbacks.CreatePaymentIntentCallback;
 import menu.bbot.reactnativestripeterminal.callbacks.DisconnectCallback;
 import menu.bbot.reactnativestripeterminal.callbacks.DiscoveryCallback;
 import menu.bbot.reactnativestripeterminal.callbacks.DiscoveryCancellationCallback;
@@ -628,6 +624,7 @@ public class RNStripeTerminalModule
                         currentPaymentIntent = paymentIntent;
                         WritableMap response = Arguments.createMap();
                         response.putMap("paymentIntent", Helpers.PaymentIntentToMap(paymentIntent));
+                        response.putString("clientSecret", paymentIntent.getClientSecret());
                         promise.resolve(response);
                     }
 
