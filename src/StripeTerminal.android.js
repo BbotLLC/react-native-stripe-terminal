@@ -314,8 +314,8 @@ class RNStripeTerminal {
     return await StripeTerminal.cancelCollectPaymentMethod();
   };
 
-  async confirmPaymentIntent() {
-    return await StripeTerminal.confirmPaymentIntent();
+  async processPayment() {
+    return await StripeTerminal.processPayment();
   };
 
   async readReusableCard() {

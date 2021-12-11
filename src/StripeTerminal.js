@@ -175,25 +175,26 @@ class RNStripeTerminal {
 
   createPaymentIntent = async (parameters) => {
     this.cancelling = false;
-    const {clientSecret} = await this.settings.createPaymentIntent(parameters);
-    this._clientSecret = clientSecret;
-    return this._clientSecret;
+    const response = await this.settings.createPaymentIntent(parameters);
+    if(response.error) return response;
+    this._clientSecret = response.clientSecret;
+    return response;
   }
 
   collectPaymentMethod = async () => {
+    if (!this._clientSecret) return {error: {message: "Can't collect payment method without calling 'createPaymentIntent' first"}};
 
-    if (!this._clientSecret) throw "Can't collect payment method without calling 'createPaymentIntent' first";
     const result = await this.terminal.collectPaymentMethod(this._clientSecret);
     if (result.error) {
-
+      return result;
     } else {
       this._paymentIntent = result.paymentIntent;
     }
-    return this._paymentIntent;
+    return result;
   }
 
   retrievePaymentIntent = () => {
-    // Not needed
+    // Not needed by Web Terminal
   }
 
   cancelCollectPaymentMethod = async () => {
@@ -201,20 +202,21 @@ class RNStripeTerminal {
     return await this.terminal.cancelCollectPaymentMethod();
   }
 
+  /**
+   *
+   * @returns {Promise<{paymentIntent: *}|{error: *}>}
+   */
   processPayment = async () => {
-    const result = await this.terminal.processPayment(this._paymentIntent);
-    this._paymentIntent = result.paymentIntent;
-    return this._paymentIntent;
-  }
+    const {paymentIntent, error} = await this.terminal.processPayment(this._paymentIntent);
+    if(error) return { error };
 
-  confirmPaymentIntent = () => this.processPayment()
+    this._paymentIntent = paymentIntent;
+    return { paymentIntent };
+  }
 
   readReusableCard = async () => {
     this.cancelling = false;
-    const result = await this.terminal.readReusableCard();
-    if (result.error) return result;
-
-    return result.payment_method;
+    return await this.terminal.readReusableCard();
   }
 
   cancelReadReusableCard = () => {
