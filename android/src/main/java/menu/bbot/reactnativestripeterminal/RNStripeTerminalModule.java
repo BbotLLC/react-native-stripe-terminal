@@ -301,12 +301,8 @@ public class RNStripeTerminalModule
         connectionPromise = promise;
 
         String locationId = options.getString("locationId");
-        if (locationId == null) {
-            if (readerLocation != null) {
-                locationId = reader.getLocation().getId();
-            } else {
-                locationId = "tml_EPf4XQx4i4rtHP"; // TODO: this should be pulled from discovery location id
-            }
+        if (locationId == null && readerLocation != null) {
+            locationId = reader.getLocation().getId();
         }
 
         if (reader != null) {

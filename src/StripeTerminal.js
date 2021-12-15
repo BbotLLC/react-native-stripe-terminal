@@ -31,6 +31,8 @@ class RNStripeTerminal {
     createPaymentIntent: () => {
       throw "createPaymentIntent is undefined. Must be initialized"
     },
+    locationId: null,
+    defaultReader: null
   }
 
   _lastConnectedReader = null;

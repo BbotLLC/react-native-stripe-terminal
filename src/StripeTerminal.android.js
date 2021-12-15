@@ -30,7 +30,8 @@ class RNStripeTerminal {
     scanTimeout: 120,
     simulated: false,
     autoReconnect: true,
-    defaultReader: null
+    defaultReader: null,
+    locationId: null
   };
 
   _lastConnectedReader = null;
@@ -158,7 +159,7 @@ class RNStripeTerminal {
         const discoveryMethod = this.getDiscoveryMethodFromDeviceType(reader.device_type);
         switch (discoveryMethod){
           case this.DiscoveryMethods.BLUETOOTH_SCAN:
-            await this.connectBluetoothReader(reader);
+            await this.connectBluetoothReader(reader, { locationId: this.settings.locationId || reader.locationId });
             break;
           case this.DiscoveryMethods.INTERNET:
             await this.connectInternetReader(reader);
@@ -241,7 +242,8 @@ class RNStripeTerminal {
   /**
    * Throws error if unsuccessful, be sure to call within try/catch block
    * @param serial
-   * @param config
+   * @param config {Object} The configuration object
+   * @param config.locationId {String} Stripe Terminal Location Id to connect the reader to
    * @returns {Promise<*>}
    */
   async connectBluetoothReader(reader, config = {}) {
