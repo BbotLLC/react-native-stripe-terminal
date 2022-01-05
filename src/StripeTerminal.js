@@ -177,10 +177,11 @@ class RNStripeTerminal {
 
   createPaymentIntent = async (parameters) => {
     this.cancelling = false;
-    const response = await this.settings.createPaymentIntent(parameters);
-    if(response.error) return response;
-    this._clientSecret = response.clientSecret;
-    return response;
+    const {error, clientSecret} = await this.settings.createPaymentIntent(parameters);
+    if(error) return error;
+
+    this._clientSecret = clientSecret;
+    return { clientSecret };
   }
 
   collectPaymentMethod = async () => {

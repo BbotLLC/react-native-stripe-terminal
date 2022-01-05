@@ -296,9 +296,13 @@ class RNStripeTerminal {
     const reader = await this.getConnectedReader();
 
     if (forceRemote || this.DeviceTypes.INTERNET.includes(reader.device_type)) {
-      const {clientSecret} = await this.settings.createPaymentIntent(parameters);
+      // Use the server-side 'createPaymentIntent' endpoint:
+      const {error, clientSecret} = await this.settings.createPaymentIntent(parameters);
+      if(error) return error;
+
       return await StripeTerminal.retrievePaymentIntent(clientSecret);
     } else {
+      // Use the native 'createPaymentIntent' method:
       return await StripeTerminal.createPaymentIntent(parameters);
     }
   };
