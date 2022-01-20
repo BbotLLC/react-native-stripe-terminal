@@ -82,15 +82,19 @@ class RNStripeTerminal {
         this._autoReconnectListener = this.on('UpdateDiscoveredReaders', this.autoReconnectReader.bind(this));
         const simulated = this.settings.defaultReader.serial_number.includes("SIMULATOR");
         const discoveryMethod = this.getDiscoveryMethodFromDeviceType(this.settings.defaultReader.device_type);
-        this.discoverReaders({
-          discoveryMethod,
-          simulated,
-          timeout: 120
-        }, () => {
-          console.log('auto discover, looking for ', settings.defaultReader);
-        }).then(() => {
-          this.trigger('DiscoverFinished', this.readerConnected);
-        });
+        try {
+          this.discoverReaders({
+            discoveryMethod,
+            simulated,
+            timeout: 120
+          }, () => {
+            console.log('auto discover, looking for ', settings.defaultReader);
+          }).then(() => {
+            this.trigger('DiscoverFinished', this.readerConnected);
+          });
+        } catch(err){
+          this.trigger("Discovering", false);
+        }
       }
     }
 
@@ -143,7 +147,11 @@ class RNStripeTerminal {
           break;
         case 'UnexpectedDisconnect':
           if (this.settings.autoReconnect && this._lastConnectedReader) {
-            this.discoverReaders(this.settings);
+            try {
+              this.discoverReaders(this.settings);
+            } catch(err){
+              this.trigger("Discovering", false);
+            }
           }
           break;
       }

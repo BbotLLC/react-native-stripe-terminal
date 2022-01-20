@@ -55,7 +55,11 @@ class RNStripeTerminal {
       onUnexpectedReaderDisconnect: () => {
         this.connectedReader = null;
         if (this.settings.autoReconnect && this._lastConnectedReader) {
-          this.discoverReaders(this.settings);
+          try {
+            this.discoverReaders(this.settings);
+          } catch(err){
+            this.trigger("Discovering", false);
+          }
         }
       },
       // 'connecting', 'connected', or 'not_connected'
@@ -73,14 +77,18 @@ class RNStripeTerminal {
 
     if (this.settings.defaultReader) {
       const simulated = this.settings.defaultReader.serial_number.includes("SIMULATOR");
-      this.discoverReaders({
-        simulated
-      }, (readers) => {
-        const foundReader = readers.find(r => r.serial_number === this.settings.defaultReader.serial_number);
-        if(foundReader){
-          this.connectReader(foundReader);
-        }
-      })
+      try {
+        this.discoverReaders({
+          simulated
+        }, (readers) => {
+          const foundReader = readers.find(r => r.serial_number === this.settings.defaultReader.serial_number);
+          if (foundReader) {
+            this.connectReader(foundReader);
+          }
+        })
+      } catch(err){
+        this.trigger("Discovering", false);
+      }
     }
   }
 
@@ -101,7 +109,7 @@ class RNStripeTerminal {
       const result = await this.terminal.discoverReaders(options);
       callbackFn(result.discoveredReaders);
     } catch (err) {
-
+      this.trigger("Discovering", false);
     }
   }
 
