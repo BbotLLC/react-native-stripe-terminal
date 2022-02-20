@@ -80,7 +80,7 @@ class RNStripeTerminal {
       if (settings.defaultReader) {
         this._lastConnectedReader = settings.defaultReader;
         this._autoReconnectListener = this.on('UpdateDiscoveredReaders', this.autoReconnectReader.bind(this));
-        const simulated = this.settings.defaultReader.serial_number.includes("SIMULATOR");
+        const simulated = this.settings.defaultReader?.serial_number?.includes("SIMULATOR");
         const discoveryMethod = this.getDiscoveryMethodFromDeviceType(this.settings.defaultReader.device_type);
         try {
           this.discoverReaders({

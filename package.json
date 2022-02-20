@@ -1,6 +1,6 @@
 {
   "name": "react-native-stripe-terminal",
-  "version": "2.6.0",
+  "version": "2.6.1",
   "description": "Stripe Terminal Web/Android 2.6.0",
   "main": "index.js",
   "scripts": {
@@ -12,7 +12,7 @@
   "author": "Gilles St-Cyr",
   "license": "",
   "dependencies": {
-    "@stripe/terminal-js": "^0.8.0",
+    "@stripe/terminal-js": "^0.9.0",
     "lodash": "^4.17.21"
   },
   "peerDependencies": {
