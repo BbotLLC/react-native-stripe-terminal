@@ -14,7 +14,7 @@ class RNStripeTerminal {
 
   DiscoveryMethods = constants.DiscoveryMethods.reduce((dict, entry) => ({...dict, [entry.name]: entry.ordinal}), {})
 
-  AvailableMethods = ['INTERNET', 'BLUETOOTH_SCAN'];
+  AvailableMethods = ['INTERNET', 'BLUETOOTH_SCAN', 'USB'];
 
   DeviceTypes = {
     BLUETOOTH_SCAN: ['WISEPAD_3', 'STRIPE_M2', 'CHIPPER_2X'],
@@ -88,7 +88,7 @@ class RNStripeTerminal {
             simulated,
             timeout: 120
           }, () => {
-            console.log('auto discover, looking for ', settings.defaultReader);
+
           }).then(() => {
             this.trigger('DiscoverFinished', this.readerConnected);
           });
@@ -265,6 +265,18 @@ class RNStripeTerminal {
 
     return response;
   };
+
+  async connectUsbReader(reader, config = {}) {
+    let response = await StripeTerminal.connectUsbReader(reader.serial_number, config);
+    this._lastConnectedReader = reader;
+    this.readerConnected = response;
+    this.connectedReader = reader;
+    if (response) {
+      this._discoverReadersCB = null;
+    }
+
+    return response;
+  }
 
   async connectEmbeddedReader(reader) {
     let response = await StripeTerminal.connectEmbeddedReader(reader.serial_number);

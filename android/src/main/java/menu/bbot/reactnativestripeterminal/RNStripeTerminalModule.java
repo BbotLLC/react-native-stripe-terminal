@@ -17,8 +17,13 @@ import com.facebook.react.bridge.WritableNativeMap;
 import com.facebook.react.modules.core.DeviceEventManagerModule;
 
 import com.stripe.stripeterminal.Terminal;
+import com.stripe.stripeterminal.external.UsbConnectivity;
 import com.stripe.stripeterminal.external.callable.PaymentIntentCallback;
 import com.stripe.stripeterminal.external.callable.ReaderCallback;
+import com.stripe.stripeterminal.external.callable.UsbReaderListener;
+import com.stripe.stripeterminal.external.models.BatteryStatus;
+import com.stripe.stripeterminal.external.models.ConnectionConfiguration;
+import com.stripe.stripeterminal.external.models.ReaderEvent;
 import com.stripe.stripeterminal.external.models.SimulateReaderUpdate;
 import com.stripe.stripeterminal.external.models.SimulatedCard;
 import com.stripe.stripeterminal.external.models.SimulatedCardType;
@@ -71,6 +76,7 @@ import androidx.annotation.NonNull;
 
 import org.jetbrains.annotations.NotNull;
 
+import kotlin.OptIn;
 import menu.bbot.reactnativestripeterminal.callbacks.DisconnectCallback;
 import menu.bbot.reactnativestripeterminal.callbacks.DiscoveryCallback;
 import menu.bbot.reactnativestripeterminal.callbacks.DiscoveryCancellationCallback;
@@ -237,8 +243,13 @@ public class RNStripeTerminalModule
 
         DiscoveryMethod discoveryMethod = DiscoveryMethod.BLUETOOTH_SCAN; // default
 
-        if (options.hasKey("discoveryMethod")) {
-            discoveryMethod = DiscoveryMethod.values()[options.getInt("discoveryMethod")];
+        if (options.hasKey("discoveryMethod") ) {
+            try {
+                int dmVal = options.getInt("discoveryMethod");
+                discoveryMethod = DiscoveryMethod.values()[dmVal];
+            } catch(Exception e) {
+                discoveryMethod = DiscoveryMethod.BLUETOOTH_SCAN;
+            }
         }
 
         discoveryInProgress = true;
@@ -404,6 +415,79 @@ public class RNStripeTerminalModule
 
             }
         }
+    }
+
+    @ReactMethod
+    @OptIn(markerClass = {UsbConnectivity.class})
+    public void connectUsbReader(String readerSerial, Promise promise) {
+        Reader reader = findReaderBySerial(readerSerial);
+
+        if(reader == null){
+            promise.reject("Error", "Reader not found");
+            return;
+        }
+
+        Terminal.getInstance().connectUsbReader(
+                reader,
+                new ConnectionConfiguration.UsbConnectionConfiguration(""),
+                new UsbReaderListener() {
+                    @Override
+                    public void onStartInstallingUpdate(@NonNull ReaderSoftwareUpdate readerSoftwareUpdate, @androidx.annotation.Nullable Cancelable cancelable) {
+
+                    }
+
+                    @Override
+                    public void onReportReaderSoftwareUpdateProgress(float v) {
+
+                    }
+
+                    @Override
+                    public void onFinishInstallingUpdate(@androidx.annotation.Nullable ReaderSoftwareUpdate readerSoftwareUpdate, @androidx.annotation.Nullable TerminalException e) {
+
+                    }
+
+                    @Override
+                    public void onReportAvailableUpdate(@NonNull ReaderSoftwareUpdate readerSoftwareUpdate) {
+
+                    }
+
+                    @Override
+                    public void onRequestReaderInput(@NonNull ReaderInputOptions readerInputOptions) {
+
+                    }
+
+                    @Override
+                    public void onRequestReaderDisplayMessage(@NonNull ReaderDisplayMessage readerDisplayMessage) {
+
+                    }
+
+                    @Override
+                    public void onReportLowBatteryWarning() {
+
+                    }
+
+                    @Override
+                    public void onBatteryLevelUpdate(float v, @NonNull BatteryStatus batteryStatus, boolean b) {
+
+                    }
+
+                    @Override
+                    public void onReportReaderEvent(@NonNull ReaderEvent readerEvent) {
+
+                    }
+                },
+                new ReaderCallback() {
+                    @Override
+                    public void onSuccess(@NonNull Reader reader) {
+
+                    }
+
+                    @Override
+                    public void onFailure(@NonNull TerminalException e) {
+
+                    }
+                }
+        );
     }
 
     @ReactMethod

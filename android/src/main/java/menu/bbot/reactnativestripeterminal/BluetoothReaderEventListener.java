@@ -2,16 +2,22 @@ package menu.bbot.reactnativestripeterminal;
 
 import android.util.Log;
 
+import androidx.annotation.NonNull;
+
+import com.facebook.react.bridge.Arguments;
+import com.facebook.react.bridge.WritableMap;
 import com.stripe.stripeterminal.external.callable.Cancelable;
 
 import com.stripe.stripeterminal.external.callable.BluetoothReaderListener;
+import com.stripe.stripeterminal.external.callable.UsbReaderListener;
+import com.stripe.stripeterminal.external.models.BatteryStatus;
 import com.stripe.stripeterminal.external.models.TerminalException;
 import com.stripe.stripeterminal.external.models.ReaderSoftwareUpdate;
 import com.stripe.stripeterminal.external.models.ReaderEvent;
 import com.stripe.stripeterminal.external.models.ReaderDisplayMessage;
 import com.stripe.stripeterminal.external.models.ReaderInputOptions;
 
-class BluetoothReaderEventListener implements BluetoothReaderListener {
+class BluetoothReaderEventListener implements BluetoothReaderListener, UsbReaderListener {
 
     private final RNStripeTerminalModule manager;
 
@@ -25,7 +31,7 @@ class BluetoothReaderEventListener implements BluetoothReaderListener {
         manager.updatePromise.resolve(true);
     }
 
-    public void onReportAvailableUpdate(ReaderSoftwareUpdate update){
+    public void onReportAvailableUpdate(@NonNull ReaderSoftwareUpdate update){
         manager.emit("UpdateAvailable", true);
     }
 
@@ -59,4 +65,12 @@ class BluetoothReaderEventListener implements BluetoothReaderListener {
         manager.emit("StartInstallingUpdate", true);
     }
 
+    @Override
+    public void onBatteryLevelUpdate(float v, @NonNull BatteryStatus batteryStatus, boolean b) {
+        WritableMap map = Arguments.createMap();
+        map.putDouble("level", v);
+        map.putString("status", batteryStatus.name());
+        map.putBoolean("charging", b);
+        manager.emit("BatteryLevelUpdate", map);
+    }
 }
