@@ -238,8 +238,14 @@ public class RNStripeTerminalModule
         DiscoveryMethod discoveryMethod = DiscoveryMethod.BLUETOOTH_SCAN; // default
 
         if (options.hasKey("discoveryMethod")) {
-            discoveryMethod = DiscoveryMethod.values()[options.getInt("discoveryMethod")];
+            try {
+                discoveryMethod = DiscoveryMethod.values()[options.getInt("discoveryMethod")];
+            } catch(Exception err) {
+               discoveryMethod = DiscoveryMethod.BLUETOOTH_SCAN;
+               Log.i(TAG, String.format("Unknown discoveryMethod: %s", options.getString("discoveryMethod")));
+            }
         }
+
 
         discoveryInProgress = true;
 
