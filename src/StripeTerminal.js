@@ -143,6 +143,9 @@ class RNStripeTerminal {
   connectBluetoothReader = async (serial) => {
     throw new Error("Bluetooth not supported on Web");
   }
+  connectUsbReader = async (serial, config) => {
+    throw new Error("USB Readers not supported on Web");
+  }
 
   disconnectReader = () => {
     this.connectedReader = null;
