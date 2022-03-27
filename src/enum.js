@@ -1,35 +1,60 @@
 class Enum {
-  static values() {
-    return Object.keys(this).map(key => this[key]);
-  }
-}
+  #ordinal;
+  #name;
 
-Enum.prototype.valueOf = function () {
-  return this.ordinal;
+  constructor(name) {
+    this.#ordinal = Object.keys(this.constructor).length;
+    this.#name = name;
+  }
+
+  get ordinal(){
+    return this.#ordinal;
+  }
+
+  get name(){
+    return this.#name;
+  }
+
+  static values() {
+    return Object.values(this);
+  }
+
+  static valueOf(name) {
+    return this[name];
+  }
+
+  toString(){
+    return this.ordinal;
+  }
 }
 
 /**
- * Use a plus symbol to coerce the ordinal value of a enumerated property:
+ * Use a plus symbol to coerce the ordinal value of an enumerated property:
+ * ```
  * +DiscoverMethod.BLUETOOTH_SCAN === 0
+ * ```
  */
 class DiscoveryMethod extends Enum {
 
-  static BLUETOOTH_SCAN = new DiscoveryMethod(0, 'BLUETOOTH_SCAN', 'Bluetooth');
-  static INTERNET = new DiscoveryMethod(1, 'INTERNET', 'Internet');
-  static LOCAL_MOBILE = new DiscoveryMethod(2, 'LOCAL_MOBILE', 'Local Mobile');
-  static HANDOFF = new DiscoveryMethod(3, 'HANDOFF', 'Handoff');
-  static EMBEDDED = new DiscoveryMethod(4, 'EMBEDDED', 'Embedded');
+  static BLUETOOTH_SCAN = new DiscoveryMethod('BLUETOOTH_SCAN', 'Bluetooth')
+  static INTERNET = new DiscoveryMethod( 'INTERNET', 'Internet')
+  static LOCAL_MOBILE = new DiscoveryMethod( 'LOCAL_MOBILE', 'Local Mobile')
+  static HANDOFF = new DiscoveryMethod('HANDOFF', 'Handoff')
+  static EMBEDDED = new DiscoveryMethod( 'EMBEDDED', 'Embedded')
+  static USB = new DiscoveryMethod('USB', 'USB')
 
-  ordinal = 0;
-  name = '';
-  display_name = '';
+  #display_name = '';
 
-  constructor(ordinal, name, display_name) {
-    super();
-    this.ordinal = ordinal;
-    this.name = name;
-    this.display_name = display_name;
+  constructor(name, display_name) {
+    super(name);
+
+    this.#display_name = display_name;
   }
+
+  get display_name(){
+    return this.#display_name;
+  }
+
 }
 
 

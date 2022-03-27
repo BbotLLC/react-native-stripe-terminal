@@ -419,7 +419,7 @@ public class RNStripeTerminalModule
 
     @ReactMethod
     @OptIn(markerClass = {UsbConnectivity.class})
-    public void connectUsbReader(String readerSerial, Promise promise) {
+    public void connectUsbReader(String readerSerial, ReadableMap options, Promise promise) {
         Reader reader = findReaderBySerial(readerSerial);
 
         if(reader == null){
@@ -427,64 +427,26 @@ public class RNStripeTerminalModule
             return;
         }
 
+        Location readerLocation = reader.getLocation();
+
+        String locationId = options.getString("locationId");
+        if (locationId == null && readerLocation != null) {
+            locationId = readerLocation.getId();
+        }
+
         Terminal.getInstance().connectUsbReader(
                 reader,
-                new ConnectionConfiguration.UsbConnectionConfiguration(""),
-                new UsbReaderListener() {
-                    @Override
-                    public void onStartInstallingUpdate(@NonNull ReaderSoftwareUpdate readerSoftwareUpdate, @androidx.annotation.Nullable Cancelable cancelable) {
-
-                    }
-
-                    @Override
-                    public void onReportReaderSoftwareUpdateProgress(float v) {
-
-                    }
-
-                    @Override
-                    public void onFinishInstallingUpdate(@androidx.annotation.Nullable ReaderSoftwareUpdate readerSoftwareUpdate, @androidx.annotation.Nullable TerminalException e) {
-
-                    }
-
-                    @Override
-                    public void onReportAvailableUpdate(@NonNull ReaderSoftwareUpdate readerSoftwareUpdate) {
-
-                    }
-
-                    @Override
-                    public void onRequestReaderInput(@NonNull ReaderInputOptions readerInputOptions) {
-
-                    }
-
-                    @Override
-                    public void onRequestReaderDisplayMessage(@NonNull ReaderDisplayMessage readerDisplayMessage) {
-
-                    }
-
-                    @Override
-                    public void onReportLowBatteryWarning() {
-
-                    }
-
-                    @Override
-                    public void onBatteryLevelUpdate(float v, @NonNull BatteryStatus batteryStatus, boolean b) {
-
-                    }
-
-                    @Override
-                    public void onReportReaderEvent(@NonNull ReaderEvent readerEvent) {
-
-                    }
-                },
+                new ConnectionConfiguration.UsbConnectionConfiguration(locationId),
+                new BluetoothReaderEventListener(this),
                 new ReaderCallback() {
                     @Override
                     public void onSuccess(@NonNull Reader reader) {
-
+                        onConnectReader(reader, promise);
                     }
 
                     @Override
                     public void onFailure(@NonNull TerminalException e) {
-
+                        promise.reject("ConnectionError", e.getErrorMessage());
                     }
                 }
         );
