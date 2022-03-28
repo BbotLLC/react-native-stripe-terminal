@@ -251,7 +251,7 @@ class RNStripeTerminal {
    */
   async connectInternetReader(reader) {
     let response = await StripeTerminal.connectInternetReader(reader.serial_number);
-    response.discoveryMethod = "INTERNET";
+    response.discovery_method = "INTERNET";
     this._lastConnectedReader = response;
     this.connectedReader = response;
     this.readerConnected = response;
@@ -272,7 +272,7 @@ class RNStripeTerminal {
    */
   async connectBluetoothReader(reader, config = {}) {
     let response = await StripeTerminal.connectBluetoothReader(reader.serial_number, config);
-    response.discoveryMethod = "BLUETOOTH_SCAN";
+    response.discovery_method = "BLUETOOTH_SCAN";
     this._lastConnectedReader = response;
     this.readerConnected = response;
     this.connectedReader = response;
@@ -285,7 +285,7 @@ class RNStripeTerminal {
 
   async connectUsbReader(reader, config = {}) {
     let response = await StripeTerminal.connectUsbReader(reader.serial_number, config);
-    response.discoveryMethod = "USB";
+    response.discovery_method = "USB";
     this._lastConnectedReader = response;
     this.readerConnected = response;
     this.connectedReader = response;
@@ -299,7 +299,7 @@ class RNStripeTerminal {
 
   async connectEmbeddedReader(reader) {
     let response = await StripeTerminal.connectEmbeddedReader(reader.serial_number);
-    response.discoveryMethod = "EMBEDDED";
+    response.discovery_method = "EMBEDDED";
     this._lastConnectedReader = response;
     this.readerConnected = response;
     this.connectedReader = response;
