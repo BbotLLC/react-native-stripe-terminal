@@ -48,7 +48,7 @@ class RNStripeTerminal {
     for(let key in this.DeviceTypes){
       if(this.DeviceTypes[key].includes(type)) return this.DiscoveryMethods[key];
     }
-    return null;
+    return 0;
   }
 
   // test to see if Terminal instance is already initialized
@@ -81,7 +81,11 @@ class RNStripeTerminal {
         this._lastConnectedReader = settings.defaultReader;
         this._autoReconnectListener = this.on('UpdateDiscoveredReaders', this.autoReconnectReader.bind(this));
         const simulated = this.settings.defaultReader?.serial_number?.includes("SIMULATOR");
-        const discoveryMethod = this.getDiscoveryMethodFromDeviceType(this.settings.defaultReader.device_type);
+        let discoveryMethod = this.getDiscoveryMethodFromDeviceType(this.settings.defaultReader.device_type);
+        if(settings.defaultReader.discoveryMethod){
+          discoveryMethod = this.DiscoveryMethods[settings.defaultReader.discoveryMethod];
+        }
+
         try {
           this.discoverReaders({
             discoveryMethod,
@@ -166,13 +170,21 @@ class RNStripeTerminal {
     if (readers.length > 0) {
       let reader = readers.find(r => r.serial_number === this._lastConnectedReader.serial_number);
       if (reader) {
-        const discoveryMethod = this.getDiscoveryMethodFromDeviceType(reader.device_type);
+        let discoveryMethod = this._lastConnectedReader?.discoveryMethod;
+        if(discoveryMethod)
+          discoveryMethod = this.DiscoveryMethods[discoveryMethod];
+        else
+          discoveryMethod = this.getDiscoveryMethodFromDeviceType(reader.device_type);
+
         switch (discoveryMethod){
           case this.DiscoveryMethods.BLUETOOTH_SCAN:
             await this.connectBluetoothReader(reader, { locationId: this.settings.locationId || reader.locationId });
             break;
           case this.DiscoveryMethods.INTERNET:
             await this.connectInternetReader(reader);
+            break;
+          case this.DiscoveryMethods.USB:
+            await this.connectUsbReader(reader);
             break;
         }
 
@@ -239,9 +251,11 @@ class RNStripeTerminal {
    */
   async connectInternetReader(reader) {
     let response = await StripeTerminal.connectInternetReader(reader.serial_number);
-    this._lastConnectedReader = reader;
-    this.connectedReader = reader;
+    response.discoveryMethod = "INTERNET";
+    this._lastConnectedReader = response;
+    this.connectedReader = response;
     this.readerConnected = response;
+
     if (response) {
       this._discoverReadersCB = null;
     }
@@ -258,9 +272,10 @@ class RNStripeTerminal {
    */
   async connectBluetoothReader(reader, config = {}) {
     let response = await StripeTerminal.connectBluetoothReader(reader.serial_number, config);
-    this._lastConnectedReader = reader;
+    response.discoveryMethod = "BLUETOOTH_SCAN";
+    this._lastConnectedReader = response;
     this.readerConnected = response;
-    this.connectedReader = reader;
+    this.connectedReader = response;
     if (response) {
       this._discoverReadersCB = null;
     }
@@ -270,9 +285,11 @@ class RNStripeTerminal {
 
   async connectUsbReader(reader, config = {}) {
     let response = await StripeTerminal.connectUsbReader(reader.serial_number, config);
-    this._lastConnectedReader = reader;
+    response.discoveryMethod = "USB";
+    this._lastConnectedReader = response;
     this.readerConnected = response;
-    this.connectedReader = reader;
+    this.connectedReader = response;
+
     if (response) {
       this._discoverReadersCB = null;
     }
@@ -282,9 +299,10 @@ class RNStripeTerminal {
 
   async connectEmbeddedReader(reader) {
     let response = await StripeTerminal.connectEmbeddedReader(reader.serial_number);
-    this._lastConnectedReader = reader;
+    response.discoveryMethod = "EMBEDDED";
+    this._lastConnectedReader = response;
     this.readerConnected = response;
-    this.connectedReader = reader;
+    this.connectedReader = response;
     if (response) {
       this._discoverReadersCB = null;
     }
