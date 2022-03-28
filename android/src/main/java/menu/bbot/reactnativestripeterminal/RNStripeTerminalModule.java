@@ -86,6 +86,7 @@ public class RNStripeTerminalModule
         implements TerminalStateManager {
 
     private static final String TAG = "RNStripeTerminal";
+    private ReactApplicationContext currentContext;
 
     private List<? extends Reader> availableReaders;
 
@@ -103,8 +104,10 @@ public class RNStripeTerminalModule
 
     public RNStripeTerminalModule(ReactApplicationContext reactContext) {
         super(reactContext);
+        currentContext = reactContext;
 
-        availableReaders = new ArrayList<Reader>();
+        if(availableReaders == null)
+            availableReaders = new ArrayList<Reader>();
     }
 
     @Override
@@ -910,7 +913,8 @@ public class RNStripeTerminalModule
             }
         }
 
-        getReactApplicationContext()
+
+        currentContext
                 .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
                 .emit("StripeTerminalEvent", returnObj);
     }

@@ -75,7 +75,7 @@ class RNStripeTerminal {
       },
     });
 
-    if (this.settings.defaultReader) {
+    if (this.settings.defaultReader?.serial_number) {
       const simulated = this.settings.defaultReader.serial_number.includes("SIMULATOR");
       try {
         this.discoverReaders({

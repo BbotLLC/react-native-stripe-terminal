@@ -79,6 +79,11 @@ export default {
       "ordinal": 4,
       "name": "EMBEDDED",
       "devices": []
+    },
+    {
+      "ordinal": 5,
+      "name": "USB",
+      "devices": []
     }
   ],
   "PaymentIntentStatus": {

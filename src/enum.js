@@ -1,3 +1,7 @@
+/**
+ * Javascript Enum class, mimics the behavior of Java's Enum class.
+ */
+
 class Enum {
   #ordinal;
   #name;
