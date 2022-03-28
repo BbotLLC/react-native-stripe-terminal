@@ -82,7 +82,7 @@ class RNStripeTerminal {
         this._autoReconnectListener = this.on('UpdateDiscoveredReaders', this.autoReconnectReader.bind(this));
         const simulated = this.settings.defaultReader?.serial_number?.includes("SIMULATOR");
         let discoveryMethod = this.getDiscoveryMethodFromDeviceType(this.settings.defaultReader.device_type);
-        if(settings.defaultReader.discoveryMethod){
+        if(settings.defaultReader.discovery_method){
           discoveryMethod = this.DiscoveryMethods[settings.defaultReader.discoveryMethod];
         }
 
@@ -170,7 +170,7 @@ class RNStripeTerminal {
     if (readers.length > 0) {
       let reader = readers.find(r => r.serial_number === this._lastConnectedReader.serial_number);
       if (reader) {
-        let discoveryMethod = this._lastConnectedReader?.discoveryMethod;
+        let discoveryMethod = this._lastConnectedReader?.discovery_method;
         if(discoveryMethod)
           discoveryMethod = this.DiscoveryMethods[discoveryMethod];
         else
