@@ -66,11 +66,11 @@ class BluetoothReaderEventListener implements BluetoothReaderListener, UsbReader
     }
 
     @Override
-    public void onBatteryLevelUpdate(float v, @NonNull BatteryStatus batteryStatus, boolean b) {
+    public void onBatteryLevelUpdate(float batteryLevel, @NonNull BatteryStatus batteryStatus, boolean isCharging) {
         WritableMap map = Arguments.createMap();
-        map.putDouble("level", v);
-        map.putString("status", batteryStatus.name());
-        map.putBoolean("charging", b);
+        map.putDouble("batteryLevel", batteryLevel);
+        map.putString("batteryStatus", batteryStatus.name());
+        map.putBoolean("isCharging", isCharging);
         manager.emit("BatteryLevelUpdate", map);
     }
 }

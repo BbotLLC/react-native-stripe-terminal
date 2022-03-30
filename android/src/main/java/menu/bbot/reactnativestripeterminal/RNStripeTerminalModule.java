@@ -310,13 +310,16 @@ public class RNStripeTerminalModule
     public void connectBluetoothReader(String readerId, ReadableMap options, Promise promise) {
 
         Reader reader = findReaderBySerial(readerId);
+        if (reader == null) {
+            promise.reject("Error", "Reader not found");
+            return;
+        }
         Location readerLocation = reader.getLocation();
-
         connectionPromise = promise;
 
         String locationId = options.getString("locationId");
         if (locationId == null && readerLocation != null) {
-            locationId = reader.getLocation().getId();
+            locationId = readerLocation.getId();
         }
 
         if (reader != null) {

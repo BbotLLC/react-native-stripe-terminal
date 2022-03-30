@@ -151,6 +151,11 @@ class RNStripeTerminal {
               break;
           }
           break;
+        case 'BatteryLevelUpdate':
+          // batteryLevel
+          // batteryStatus
+          // isCharging
+          break;
         case 'UnexpectedDisconnect':
           if (this.settings.autoReconnect && this._lastConnectedReader) {
             try {
