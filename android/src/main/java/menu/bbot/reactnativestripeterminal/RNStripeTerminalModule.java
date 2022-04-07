@@ -18,6 +18,8 @@ import com.facebook.react.modules.core.DeviceEventManagerModule;
 
 import com.stripe.stripeterminal.Terminal;
 import com.stripe.stripeterminal.external.UsbConnectivity;
+import com.stripe.stripeterminal.external.callable.ConnectionTokenCallback;
+import com.stripe.stripeterminal.external.callable.ConnectionTokenProvider;
 import com.stripe.stripeterminal.external.callable.PaymentIntentCallback;
 import com.stripe.stripeterminal.external.callable.ReaderCallback;
 import com.stripe.stripeterminal.external.callable.UsbReaderListener;
@@ -100,7 +102,7 @@ public class RNStripeTerminalModule
     private Promise connectionPromise;
     public Promise updatePromise;
     private PaymentIntent currentPaymentIntent;
-    private TokenProvider tokenProvider;
+    private ConnectionTokenCallback tokenCallback;
 
     public RNStripeTerminalModule(ReactApplicationContext reactContext) {
         super(reactContext);
@@ -108,6 +110,7 @@ public class RNStripeTerminalModule
 
         if(availableReaders == null)
             availableReaders = new ArrayList<Reader>();
+
     }
 
     @Override
@@ -172,14 +175,18 @@ public class RNStripeTerminalModule
         }
 
         try {
-            // Create your token provider.
-            tokenProvider = new TokenProvider(this);
-
             TerminalListener listener = new TerminalEventListener(this);
 
             ReactApplicationContext reactContext = getReactApplicationContext();
             // Pass in the current application context, the desired log level, your token provider, and the listener you created
-            Terminal.initTerminal(reactContext, LogLevel.VERBOSE, tokenProvider, listener);
+            Terminal.initTerminal(reactContext, LogLevel.VERBOSE, new ConnectionTokenProvider() {
+                @Override
+                public void fetchConnectionToken(@NonNull ConnectionTokenCallback connectionTokenCallback) {
+                    Log.i(TAG, "fetchConnectionToken");
+                    tokenCallback = connectionTokenCallback;
+                    emit("RequestConnectionToken", true);
+                }
+            }, listener);
 
             Terminal terminal = Terminal.getInstance();
 
@@ -194,14 +201,14 @@ public class RNStripeTerminalModule
 
     @ReactMethod
     public void setConnectionToken(String token, String errorMsg, Promise promise) {
-        if (tokenProvider.callback != null) {
+        if (tokenCallback != null) {
             if (errorMsg != null && !errorMsg.trim().isEmpty()) {
-                tokenProvider.callback.onFailure(new ConnectionTokenException(errorMsg));
+                tokenCallback.onFailure(new ConnectionTokenException(errorMsg));
             } else {
-                tokenProvider.callback.onSuccess(token);
+                tokenCallback.onSuccess(token);
             }
         }
-        tokenProvider.callback = null;
+        tokenCallback = null;
     }
 
     @ReactMethod
@@ -900,9 +907,6 @@ public class RNStripeTerminalModule
         m.put("data", data);
 
         WritableNativeMap returnObj = Arguments.makeNativeMap(m);
-
-        Log.i("emit again", returnObj.toString());
-
         // For some reason, onConnectReader sometimes doesn't get called on successful connection
         // This lets us manually resolve the promise
         // (Likely because our React Native Bridge gets destroyed on refresh)
