@@ -65,7 +65,10 @@ class RNStripeTerminal {
       // 'connecting', 'connected', or 'not_connected'
       onConnectionStatusChange: ({status}) => {
         status = status?.toUpperCase();
-        if(status === "NOT_CONNECTED") this.connectedReader = null;
+        if(status === "NOT_CONNECTED") {
+          this.connectedReader = null;
+          this.readerConnecting = false;
+        }
         this.readerConnected = (status === 'CONNECTED');
         this.trigger("ConnectionStatusChange", status);
       },
@@ -118,6 +121,7 @@ class RNStripeTerminal {
   }
 
   connectReader = async (reader) => {
+    this.readerConnecting = true;
     try {
       let response = await this.terminal.connectReader(reader);
       if (response.error) {
