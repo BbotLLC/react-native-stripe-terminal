@@ -53,22 +53,9 @@ ext {
     compileSdkVersion = 29
     supportLibVersion = "28.0.0"
 
-  //  appcompatVersion = '1.3.0'
-  //  constraintVersion = '1.1.3'
-  //  constraintlayoutVersion = '2.0.4'
- //   coreTestingVersion = '2.1.0'
-  //  coroutineVersion = '1.5.0'
-  //  databindingVersion = '3.1.4'
-  //  legacysupportVersion = '1.0.0'
-   // materialVersion = '1.1.0'
     okhttpVersion = '4.7.2'
-    //retrofitVersion = '2.9.0'
-   // stethoVersion = '1.5.1'
-   // viewModelVersion = '2.3.1'
 
-    //leakCanaryVersion = '2.7'
-
-    stripeTerminalVersion = '2.9.0'
+    stripeTerminalVersion = '2.10.2'
 }
 
 dependencies {
