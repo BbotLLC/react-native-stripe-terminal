@@ -312,9 +312,9 @@ class RNStripeTerminal {
     return response;
   }
 
-  async connectHandoffReader(reader) {
+  async connectHandoffReader(reader, config = {}) {
     this.readerConnecting = true;
-    let response = await StripeTerminal.connectHandoffReader(reader.serial_number);
+    let response = await StripeTerminal.connectHandoffReader(reader.serial_number, config);
     response.discovery_method = "HANDOFF";
     this._lastConnectedReader = response;
     this.readerConnected = response;
