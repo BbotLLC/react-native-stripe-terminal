@@ -20,6 +20,7 @@ import com.stripe.stripeterminal.Terminal;
 import com.stripe.stripeterminal.external.UsbConnectivity;
 import com.stripe.stripeterminal.external.callable.ConnectionTokenCallback;
 import com.stripe.stripeterminal.external.callable.ConnectionTokenProvider;
+import com.stripe.stripeterminal.external.callable.HandoffReaderListener;
 import com.stripe.stripeterminal.external.callable.PaymentIntentCallback;
 import com.stripe.stripeterminal.external.callable.ReaderCallback;
 import com.stripe.stripeterminal.external.callable.UsbReaderListener;
@@ -467,13 +468,18 @@ public class RNStripeTerminalModule
     }
 
     @ReactMethod
-    public void connectHandoffReader(String readerId, Promise promise) {
+    public void connectHandoffReader(String readerId, ReadableMap options, Promise promise) {
         Reader reader = findReaderBySerial(readerId);
         connectionPromise = promise;
 
         if (reader == null) {
             promise.reject("Error", "Error connecting to reader. Please try again");
         } else {
+            String locationId = options.getString("locationId");
+            Location readerLocation = reader.getLocation();
+            if (locationId == null && readerLocation != null) {
+                locationId = readerLocation.getId();
+            }
             try {
                 Reader connectedReader = Terminal.getInstance().getConnectedReader();
                 if (connectedReader != null) {
@@ -481,7 +487,8 @@ public class RNStripeTerminalModule
                 }
                 Terminal.getInstance().connectHandoffReader(
                         reader,
-                        new HandoffConnectionConfiguration(this),
+                        new ConnectionConfiguration.HandoffConnectionConfiguration(locationId),
+                        null,
                         new ReaderCallback() {
                             @Override
                             public void onSuccess(@NonNull Reader reader) {

@@ -193,7 +193,7 @@ class RNStripeTerminal {
             await this.connectUsbReader(reader);
             break;
           case this.DiscoveryMethods.HANDOFF:
-            await this.connectHandoffReader(reader);
+            await this.connectHandoffReader(reader, { locationId: this.settings.locationId });
             break;
           case this.DiscoveryMethods.EMBEDDED:
             await this.connectEmbeddedReader(reader);
