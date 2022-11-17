@@ -55,7 +55,7 @@ ext {
 
     okhttpVersion = '4.7.2'
 
-    stripeTerminalVersion = '2.12.0'
+    stripeTerminalVersion = '2.15.0'
 }
 
 dependencies {
@@ -70,6 +70,7 @@ dependencies {
     //implementation "com.squareup.okhttp3:okhttp:$okhttpVersion"
 
     // Stripe Terminal library
-    implementation "com.stripe:stripeterminal:$stripeTerminalVersion"
+    implementation "com.stripe:stripeterminal-core:$stripeTerminalVersion"
+    implementation "com.stripe:stripeterminal-handoffclient:$stripeTerminalVersion"
 
 }

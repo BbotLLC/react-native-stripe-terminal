@@ -59,6 +59,7 @@ import com.stripe.stripeterminal.external.models.TerminalException;
 import com.stripe.stripeterminal.external.models.ConnectionConfiguration.BluetoothConnectionConfiguration;
 import com.stripe.stripeterminal.external.models.ConnectionConfiguration.InternetConnectionConfiguration;
 import com.stripe.stripeterminal.external.models.ConnectionConfiguration.EmbeddedConnectionConfiguration;
+import com.stripe.stripeterminal.external.models.ConnectionConfiguration.HandoffConnectionConfiguration;
 
 
 import java.util.ArrayList;
@@ -463,6 +464,40 @@ public class RNStripeTerminalModule
                     }
                 }
         );
+    }
+
+    @ReactMethod
+    public void connectHandoffReader(String readerId, Promise promise) {
+        Reader reader = findReaderBySerial(readerId);
+        connectionPromise = promise;
+
+        if (reader == null) {
+            promise.reject("Error", "Error connecting to reader. Please try again");
+        } else {
+            try {
+                Reader connectedReader = Terminal.getInstance().getConnectedReader();
+                if (connectedReader != null) {
+                    Terminal.getInstance().disconnectReader(new DisconnectCallback(this, null));
+                }
+                Terminal.getInstance().connectHandoffReader(
+                        reader,
+                        new HandoffConnectionConfiguration(this),
+                        new ReaderCallback() {
+                            @Override
+                            public void onSuccess(@NonNull Reader reader) {
+                                onConnectReader(reader, promise);
+                            }
+
+                            @Override
+                            public void onFailure(@NonNull TerminalException e) {
+
+                            }
+                        }
+                );
+            } catch (Exception exp) {
+
+            }
+        }
     }
 
     @ReactMethod

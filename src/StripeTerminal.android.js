@@ -14,11 +14,12 @@ class RNStripeTerminal {
 
   DiscoveryMethods = constants.DiscoveryMethods.reduce((dict, entry) => ({...dict, [entry.name]: entry.ordinal}), {})
 
-  AvailableMethods = ['INTERNET', 'BLUETOOTH_SCAN', 'USB'];
+  AvailableMethods = ['INTERNET', 'BLUETOOTH_SCAN', 'USB', 'HANDOFF'];
 
   DeviceTypes = {
     BLUETOOTH_SCAN: ['WISEPAD_3', 'STRIPE_M2', 'CHIPPER_2X'],
-    INTERNET: ['VERIFONE_P400', 'WISEPOS_E']
+    INTERNET: ['VERIFONE_P400', 'WISEPOS_E'],
+    HANDOFF: ['BBPOS_WISEPOS_E_DEVKIT']
   }
 
   settings = {
@@ -191,6 +192,12 @@ class RNStripeTerminal {
           case this.DiscoveryMethods.USB:
             await this.connectUsbReader(reader);
             break;
+          case this.DiscoveryMethods.HANDOFF:
+            await this.connectHandoffReader(reader);
+            break;
+          case this.DiscoveryMethods.EMBEDDED:
+            await this.connectEmbeddedReader(reader);
+            break;
         }
 
         this._autoReconnectListener.remove();
@@ -298,6 +305,20 @@ class RNStripeTerminal {
     this.readerConnected = response;
     this.connectedReader = response;
 
+    if (response) {
+      this._discoverReadersCB = null;
+    }
+
+    return response;
+  }
+
+  async connectHandoffReader(reader) {
+    this.readerConnecting = true;
+    let response = await StripeTerminal.connectHandoffReader(reader.serial_number);
+    response.discovery_method = "HANDOFF";
+    this._lastConnectedReader = response;
+    this.readerConnected = response;
+    this.connectedReader = response;
     if (response) {
       this._discoverReadersCB = null;
     }
