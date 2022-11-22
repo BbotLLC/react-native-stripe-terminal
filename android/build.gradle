@@ -55,7 +55,7 @@ ext {
 
     okhttpVersion = '4.7.2'
 
-    stripeTerminalVersion = '2.15.0'
+    stripeTerminalVersion = '2.16.0'
 }
 
 dependencies {
